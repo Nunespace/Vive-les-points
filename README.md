@@ -1,17 +1,11 @@
-# Application web Orange County Lettings 
+# Vive les points! 
 
 ***
-Orange County Lettings est une start-up dans le secteur de la location de biens immobiliers. La start-up est en pleine phase d’expansion aux États-Unis. 
-Elle souhaite améliorer son site tant sur le code que sur le déploiement.
+L'application Vive les points est destinée aux parents pour les aider à gérer les bons et mauvais points de leurs enfants.
 
-## Amélioration de l'application
+## Fonctionnalité de l'application
 
- Les améliorations suivantes ont été mise en oeuvre:
-- Refonte de l'architecture modulaire dans le repository GitHub ;
-- Réduction de diverses dettes techniques sur le projet ;
-- Ajout d'un pipeline CI/CD ainsi que son déploiement ; 
-- Surveillance de l’application et suivi des erreurs via Sentry ; 
-- Création de la documentation technique de l'application avec Read The Docs et Sphinx.
+ L'application dispose d'une page accueil (cliquer sur Vive les points), d'une page barême des points et récompenses (cliquer sur Barêmes), et une page historique des points pour chaque enfant (cliquer sur les points de l'enfant concerné) et d'une page pour modifier les points. 
 
 
 ## Prérequis
@@ -29,12 +23,12 @@ et mettre *pip install* à la place de *pipenv install*
 
 1. Ouvrez le **terminal** et tapez ::
 ```
-git clone https://github.com/Nunespace/Lettings.git
+git clone https://github.com/Nunespace/Vive-les-points.git
 ```
 
 2. Placez-vous dans le répertoire Lettings :
 ```
-cd Lettings
+cd Vive-les-points
 ```
 
 3. Installez les dépendances du projet :

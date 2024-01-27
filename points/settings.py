@@ -135,3 +135,8 @@ INTERNAL_IPS = [
 # Config of django-crispy-forms for Bootstrap 5
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda r: False,  # Mettre True pour activer la barre debug toolbar sur le navigateur
+    # '...
+}
