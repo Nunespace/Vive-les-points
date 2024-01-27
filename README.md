@@ -28,7 +28,7 @@ et mettre *pip install* à la place de *pipenv install*
 git clone https://github.com/Nunespace/Vive-les-points.git
 ```
 
-2. Placez-vous dans le répertoire Lettings :
+2. Placez-vous dans le répertoire Vive-les-points :
 ```
 cd Vive-les-points
 ```
@@ -67,8 +67,8 @@ pipenv run python manage.py createsuperuser
 pipenv run python manage.py runserver
 ```
 
-3. Après avoir démarrer le serveur local (voir *Installation/6 ci-dessus*), taper l'url suivante dans votre navigateur : <http://127.0.0.1:8000/admin/>
+3. Taper l'url suivante dans votre navigateur : <http://127.0.0.1:8000/admin/>
 
 
-4. Entrer votre identifiant et votre mot de passe pour accéder au site d'administration de Django : ce site permet de gérer toutes les opérations [CRUD](https://openclassrooms.com/fr/courses/7172076-debutez-avec-le-framework-django/7516605-effectuez-des-operations-crud-dans-ladministration-de-django) sur les données de l'applications (enfants, points positifs, points négatifs).
+4. Entrer votre identifiant et votre mot de passe pour accéder au site d'administration de Django : ce site permet de gérer toutes les opérations [CRUD](https://openclassrooms.com/fr/courses/7172076-debutez-avec-le-framework-django/7516605-effectuez-des-operations-crud-dans-ladministration-de-django) sur les données de l'applications (création, modification, effacement, mise à jour des enfants, des points positifs et des points négatifs).
 
