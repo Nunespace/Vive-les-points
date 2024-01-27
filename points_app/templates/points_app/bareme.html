@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row p-3 mb-3">
+        <table class=" table table-light table-striped table-hover mx-auto pb-5">
+            <caption class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Barême des récompenses</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Nombre de points</th>
+                    <th scope="col">Valeur en €</th>
+                    <th scope="col">Valeur en temps de jeu vidéo</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>5</td>
+                <td>Entre 5 et 10 €</td>
+                <td>10 minutes</td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td>Entre 10 et 15 €</td>
+                <td>20 minutes</td>
+            </tr>
+        </table>
+    </div>
+    <div class="row p-3 mb-3">
+        <table class="table table-light table-striped table-hover mx-auto">
+            <caption  class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Barême des points positifs</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Motif</th>
+                    <th scope="col">Nombre de points attribuables</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>Ranger sa chambre</td>
+                <td>+1</td>
+            </tr>
+            <tr>
+                <td>Etre à l'heure le matin TOUTE la semaine pour aller à l'école, sans crise</td>
+                <td>+1</td>
+            </tr>
+        </table>
+    </div>
+    <div class="row p-3 mb-3">
+        <table class="table table-light table-striped table-hover mx-auto">
+            <caption  class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Barême des points négatifs</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Motif</th>
+                    <th scope="col">Nombre de points en moins</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>Ne pas écouter ses parents(ne met pas les couverts, ne range pas qq chose....)</td>
+                <td>-1</td>
+            </tr>
+            <tr>
+                <td>Insulter ses parents</td>
+                <td>-3</td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endblock content %}

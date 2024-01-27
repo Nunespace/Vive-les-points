@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <h1 class="text-center" style="caption-side:top; font-family: 'Bungee Spice'">{{ enfant.prenom}}</h1>
+            <p class="text-center"  style="caption-side:top; font-family: 'Bungee Spice'">
+            Tu as {{enfant.solde_points}} points.
+            </p>
+        <table class=" table table-light table-striped table-hover px-3 mx-5">
+            <caption class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Liste des points positifs</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Motif</th>
+                </tr>
+            </thead>
+            {% for point in enfant.point_positif_set.all %}
+            <tr>
+                <td>{{point.date}}</td>
+                <td>{{point.nb_positif}}</td>
+                <td>{{point.motif1}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <table class="table table-light table-striped table-hover p-3 m-5">
+            <caption  class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Liste des points négatifs</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Motif</th>
+                </tr>
+            </thead>
+            {% for point in enfant.point_negatif_set.all %}
+            <tr>
+                <td>{{point.date}}</td>
+                <td>{{point.nb_negatif}}</td>
+                <td>{{point.motif2}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock content %}

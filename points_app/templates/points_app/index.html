@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="py-5">
+  <div class="container border border-info bg-info rounded">
+
+    <div class="row bg-info mx-auto p-3">
+      {% for enfant in enfants_list %}
+      <div class="col-6 text-center" style="font-family: 'Bungee Spice', sans-serif;">
+        <h2 class="fw-bold">{{ enfant.prenom }}</h2
+        <p>Aujourd'hui, tu as : </p><a class="btn btn-primary btn-lg p-3 lg-p-5 m-1" href="{% url 'historique' enfant.id %}" role="button" style="font-size:xx-large;">{{enfant.solde_points}}</a>
+        <p>points.</p>
+        
+        <a class="btn btn-outline-primary btn-lg m-5" href="{% url 'new_points' enfant.id %}" role="button">Modifier les points</a>
+      </div>
+      {% endfor %} 
+    </div>
+  </div>
+</section>
+ 
+{% endblock content %}
+       
