@@ -1,3 +1,5 @@
+![logo-image](doc/vive_les_points.png)
+
 # Vive les points! 
 
 ***
