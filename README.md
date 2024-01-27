@@ -7,7 +7,7 @@ L'application Vive les points est destinée aux parents pour les aider à gérer
 
 ## Fonctionnalité de l'application
 
- L'application dispose d'une page accueil (cliquer sur Vive les points), d'une page barême des points et récompenses (cliquer sur Barêmes), et une page historique des points pour chaque enfant (cliquer sur les points de l'enfant concerné) et d'une page pour modifier les points. 
+ L'application dispose d'une page accueil (cliquer sur Vive les points), d'une page barême des points et récompenses (cliquer sur Barêmes), une page historique des points pour chaque enfant (cliquer sur les points de l'enfant concerné) et d'une page pour modifier les points. 
 
 
 ## Prérequis
