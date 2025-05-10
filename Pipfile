@@ -4,12 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+django = "*"
 django-debug-toolbar = "*"
-install = "*"
 crispy-bootstrap5 = "*"
 django-crispy-forms = "*"
+django-unique-user-email = {editable = true, ref = "translations", git = "git+https://github.com/tchappui/django-unique-user-email.git"}
 
 [dev-packages]
+pytest-django = "*"
 
 [requires]
 python_version = "3.12"

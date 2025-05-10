@@ -20,7 +20,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-w4=l$gl&jcbn$((dh-x1afur3(!l-%twsa6wcvav_loi959*f%"
+SECRET_KEY = (
+    "django-insecure-w4=l$gl&jcbn$((dh-x1afur3(!l-%twsa6wcvav_loi959*f%"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -59,7 +61,7 @@ ROOT_URLCONF = "points.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR.joinpath('templates')],
+        "DIRS": [BASE_DIR.joinpath("templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -104,6 +106,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Permet de se connecter avec l’email à la place du nom d’utilisateur.
+
+
+AUTHENTICATION_BACKENDS = [
+    "unique_user_email.backend.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# Pour éviter les doublons d’email dans le modèle User.
+UNIQUE_USER_EMAIL = True
+
+AUTH_USER_MODEL = "auth.User"
+
+LOGOUT_REDIRECT_URL = "login"
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -111,7 +128,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "fr-fr"
 
 TIME_ZONE = "Europe/Paris"
-#"UTC"
+# "UTC"
 
 USE_I18N = True
 
@@ -137,6 +154,6 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': lambda r: False,  # Mettre True pour activer la barre debug toolbar sur le navigateur
+    "SHOW_TOOLBAR_CALLBACK": lambda r: False,  # Mettre True pour activer la barre debug toolbar sur le navigateur
     # '...
 }

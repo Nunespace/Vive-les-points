@@ -3,7 +3,18 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.generic import View, ListView, DetailView
 from .models import Enfant, Point_negatif, Point_positif
-from .form import PointsPositifsCreationForm, PointsNegatifsCreationForm
+from .form import EmailAuthenticationForm, PointsPositifsCreationForm, PointsNegatifsCreationForm
+from django.contrib.auth.views import LoginView
+from django.contrib import messages
+
+
+class EmailLoginView(LoginView):
+    template_name = "registration/login.html"
+    authentication_form = EmailAuthenticationForm
+
+    def form_valid(self, form):
+        messages.success(self.request, "Connexion réussie. Bienvenue !")
+        return super().form_valid(form)
 
 
 def bareme(request):
