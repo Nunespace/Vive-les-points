@@ -1,3 +1,16 @@
-db.sqlite3
+
 .tmp.driveupload/
 .tmp.drivedownload/
+
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+.env
+.env.*
+db.sqlite3
+/media/
+/staticfiles/
+/venv/
+/pipenv/
+Pipfile.lock
