@@ -1,16 +1,41 @@
 
+# ⚙️ Fichiers système temporaires
 .tmp.driveupload/
 .tmp.drivedownload/
-
-__pycache__/
-*.py[cod]
-*.sqlite3
 *.log
+*.py[cod]
+__pycache__/
+.python-version
+.runserver.bat
+
+# 🛠️ Fichiers liés à l'environnement de développement
 .env
 .env.*
-db.sqlite3
-/media/
-/staticfiles/
+.vscode/
+.idea/
+.vim
+coverage
+.coverage
+htmlcov/
+
+# 🧪 Données de tests
+mail.html
+
+# 📦 Environnements virtuels
 /venv/
 /pipenv/
 Pipfile.lock
+
+# 🗃️ Base de données SQLite
+db.sqlite3
+*.sqlite3
+
+# 📁 Fichiers statiques et médias
+/media/
+/media
+/staticfiles/
+
+# 📦 Node (si tu l’utilises)
+node_modules/
+/npm-debug.log
+
