@@ -9,6 +9,7 @@ django-debug-toolbar = "*"
 crispy-bootstrap5 = "*"
 django-crispy-forms = "*"
 django-unique-user-email = {editable = true, ref = "translations", git = "git+https://github.com/tchappui/django-unique-user-email.git"}
+django-environ = "*"
 
 [dev-packages]
 pytest-django = "*"

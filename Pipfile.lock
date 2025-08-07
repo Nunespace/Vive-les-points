@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2bca5efdd746b522a44d4becb357f3f774c89e06e56c50f8178c89804006b7a6"
+            "sha256": "2e75ba595dfd3d8de4c9bd5a305b8fb9e04b521cbe70945bf956806374d66795"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -59,6 +59,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==5.2.0"
+        },
+        "django-environ": {
+            "hashes": [
+                "sha256:227dc891453dd5bde769c3449cf4a74b6f2ee8f7ab2361c93a07068f4179041a",
+                "sha256:92fb346a158abda07ffe6eb23135ce92843af06ecf8753f43adf9d2366dcc0ca"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.9' and python_version < '4'",
+            "version": "==0.12.0"
         },
         "django-unique-user-email": {
             "editable": true,
