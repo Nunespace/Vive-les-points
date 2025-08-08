@@ -1,13 +1,14 @@
-#!/usr/bin/env python
+# manage.py
 import os
 import sys
 
-from config import settings
-
+def main():
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE",
+        os.environ.get("DJANGO_SETTINGS_MODULE", "config.settings.dev")
+    )
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(sys.argv)
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
-
-    from django.core.management import execute_from_command_line
-
-    execute_from_command_line(sys.argv)
+    main()

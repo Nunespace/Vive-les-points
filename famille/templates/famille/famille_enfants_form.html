@@ -1,0 +1,56 @@
+{# templates/famille/famille_enfants_form.html #}
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">
+    {% if object %}Modifier ma famille{% else %}Créer ma famille{% endif %}
+  </h2>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="card mb-4">
+      <div class="card-header">Famille</div>
+      <div class="card-body">
+        <div class="mb-3">
+          {{ form.nom.label_tag }} {{ form.nom }}
+          {% for e in form.nom.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="form-check mb-3">
+          {{ form.is_first_login }} {{ form.is_first_login.label_tag }}
+          {% for e in form.is_first_login.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Enfants</div>
+      <div class="card-body">
+        {{ enfant_formset.management_form }}
+        {% for f in enfant_formset %}
+          <div class="row g-3 align-items-end border-bottom pb-3 mb-3">
+            <div class="col-md-5">
+              {{ f.prenom.label_tag }} {{ f.prenom }}
+              {% for e in f.prenom.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-5">
+              {{ f.solde_points.label_tag }} {{ f.solde_points }}
+              {% for e in f.solde_points.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-2">
+              {% if enfant_formset.can_delete %}
+                <div class="form-check">
+                  {{ f.DELETE }} <label class="form-check-label">Supprimer</label>
+                </div>
+              {% endif %}
+            </div>
+            {{ f.id }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Enregistrer</button>
+  </form>
+</div>
+{% endblock %}

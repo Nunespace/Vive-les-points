@@ -1,7 +1,11 @@
-
+# config/settings/base.py
+import os
+import locale
 from pathlib import Path
+from . import BASE_DIR
+from . import env
+#import pymysql
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-w4=l$gl&jcbn$((dh-x1afur3(!l-%twsa6wcvav_loi959*f%"
 
@@ -33,7 +37,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "points.urls"
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
@@ -51,7 +55,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "points.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
@@ -75,7 +79,8 @@ AUTHENTICATION_BACKENDS = [
 UNIQUE_USER_EMAIL = True
 AUTH_USER_MODEL = "auth.User"
 
-LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = "login"               # (par nom de route)
+LOGIN_REDIRECT_URL = "accueil"          # où on atterrit après login
 LOGOUT_REDIRECT_URL = "login"
 
 LANGUAGE_CODE = "fr-fr"
