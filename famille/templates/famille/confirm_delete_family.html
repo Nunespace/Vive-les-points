@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4 pb-5">
+  <h1 class="display-6 fw-bold text-danger mb-3">Supprimer la famille</h1>
+
+  <div class="alert alert-warning">
+    <strong>Attention :</strong> cette action est <u>définitive</u>. Elle supprimera :
+    <ul class="mb-0">
+      <li>La famille <strong>{{ famille.nom }}</strong></li>
+      <li>Tous les enfants et leurs données</li>
+      <li>Tous les comptes utilisateurs liés à la famille (parents et enfants)</li>
+      <li>Toutes les entités reliées à la famille (ex. points, etc.)</li>
+    </ul>
+  </div>
+
+  <form method="post" onsubmit="return confirm('Confirmez-vous la suppression DEFINITIVE de toute la famille ?');" novalidate>
+    {% csrf_token %}
+
+    <div class="card mb-3 border-danger">
+      <div class="card-header bg-danger-subtle fw-semibold">
+        Confirmation forte
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Tapez exactement : <code>{{ famille.nom }}</code></label>
+          {{ form.family_name }}
+          <div class="text-danger small">{{ form.family_name.errors }}</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Votre mot de passe</label>
+          {{ form.password }}
+          <div class="text-danger small">{{ form.password.errors }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <a href="{% url 'famille:manage_account' %}" class="btn btn-outline-secondary">Annuler</a>
+      <button class="btn btn-danger">Supprimer définitivement</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

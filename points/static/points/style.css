@@ -5,3 +5,31 @@ body {
     opacity: 0.9;
 }
 
+
+:root { --footer-h: 72px; }      /* ≈ hauteur du footer */
+main { padding-bottom: calc(var(--footer-h) + 1rem); } /* évite le chevauchement */
+
+
+/* Titre de page */
+.page-title {
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 1.2;
+}
+
+/* Contraste si fond clair */
+.page-title-contrast {
+  color: #0b2e13; /* ou #0d6efd si tu préfères bleu bootstrap */
+  text-shadow: 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* Stack des messages, espace pour ne pas se coller au header */
+.alerts-stack { padding-top: .5rem; }
+
+/* Meilleure lisibilité des erreurs longues */
+.alert ul { margin-bottom: 0; }
+.alert { font-size: 1rem; }
+
+/* Espace de sécurité en bas si footer fixed */
+:root { --footer-h: 72px; }
+main { padding-bottom: calc(var(--footer-h) + 1rem); }

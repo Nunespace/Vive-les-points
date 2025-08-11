@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container my-4 pb-5">
+  <h1 class="page-title page-title-contrast display-6 mb-4">Créer un compte famille</h1>
+
+  
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="card mb-4">
+      <div class="card-header fw-bold">Famille</div>
+      <div class="card-body">
+        {{ famille_form.non_field_errors }}
+        <div class="mb-3">
+          <label class="form-label">Nom de la famille</label>
+          {{ famille_form.nom }}
+          {{ famille_form.nom.errors }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Parents</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-parent">+ Ajouter un parent</button>
+      </div>
+      <div class="card-body" id="parents-container">
+        {{ parent_formset.management_form }}
+        {% for form in parent_formset %}
+          <div class="border rounded p-3 mb-3 parent-form">
+            {{ form.non_field_errors }}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Prénom</label>{{ form.first_name }}{{ form.first_name.errors }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Nom</label>{{ form.last_name }}{{ form.last_name.errors }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>{{ form.email }}{{ form.email.errors }}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Mot de passe</label>{{ form.password1 }}{{ form.password1.errors }}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Confirmer</label>{{ form.password2 }}{{ form.password2.errors }}
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              {{ form.DELETE }} <label class="form-check-label">Supprimer ce parent</label>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Enfants</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-enfant">+ Ajouter un enfant</button>
+      </div>
+      <div class="card-body" id="enfants-container">
+        {{ enfant_formset.management_form }}
+        {% for form in enfant_formset %}
+          <div class="border rounded p-3 mb-3 enfant-form">
+            {{ form.non_field_errors }}
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Prénom</label>{{ form.prenom }}{{ form.prenom.errors }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Solde initial</label>{{ form.solde_points }}{{ form.solde_points.errors }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Email (facultatif)</label>{{ form.email }}{{ form.email.errors }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Mot de passe (si email)</label>{{ form.password }}{{ form.password.errors }}
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              {{ form.DELETE }} <label class="form-check-label">Supprimer cet enfant</label>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="text-end">
+      <button type="submit" class="btn btn-primary">Créer le compte</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Duplication simple de formulaires côté client pour formsets
+  function addForm(prefix, containerId) {
+    const container = document.getElementById(containerId);
+    const totalFormsInput = container.querySelector(`input[name="${prefix}-TOTAL_FORMS"]`);
+    const total = parseInt(totalFormsInput.value, 10);
+    const firstForm = container.querySelector(`.${prefix === 'parents' ? 'parent-form' : 'enfant-form'}`);
+    const newForm = firstForm.cloneNode(true);
+
+    // reset champs
+    newForm.querySelectorAll('input').forEach(inp => {
+      if (inp.type === 'checkbox') { inp.checked = false; return; }
+      inp.value = '';
+      // Re-index des noms
+      inp.name = inp.name.replace(`${prefix}-0-`, `${prefix}-${total}-`);
+      inp.id = inp.id.replace(`${prefix}-0-`, `${prefix}-${total}-`);
+    });
+
+    container.appendChild(newForm);
+    totalFormsInput.value = total + 1;
+  }
+
+  document.getElementById('add-parent').addEventListener('click', () => addForm('parents', 'parents-container'));
+  document.getElementById('add-enfant').addEventListener('click', () => addForm('enfants', 'enfants-container'));
+</script>
+{% endblock %}

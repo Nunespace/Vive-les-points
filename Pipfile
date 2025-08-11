@@ -11,6 +11,8 @@ django-crispy-forms = "*"
 django-environ = "*"
 pymysql = "*"
 django-unique-user-email = "*"
+flake8-tidy-imports = "*"
+flake8 = "*"
 
 [dev-packages]
 pytest-django = "*"

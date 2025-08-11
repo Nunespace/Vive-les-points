@@ -1,27 +1,28 @@
 from django.db import models
 from django.conf import settings  # système de configuration global de Django
+from django.contrib.auth.models import User
+
 
 
 class Famille(models.Model):
-    """
-    Modèle représentant une famille.
-    """
-    nom = models.CharField(max_length=100, unique=True, verbose_name="Nom de la famille")
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="user_famille",
-    )
-    is_first_login = models.BooleanField(default=True)
+    nom = models.CharField(max_length=150)
+    
 
     def __str__(self):
         return self.nom
 
-    class Meta:
-        verbose_name = "Famille"
-        verbose_name_plural = "Familles"
-        ordering = ['nom']
+class UserProfile(models.Model):
+    ROLE_CHOICES = (("parent", "Parent"), ("enfant", "Enfant"))
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    famille = models.ForeignKey(Famille, on_delete=models.CASCADE, related_name="membres")
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
 
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.role}) - {self.famille}"
+
+
+
+    
 
 class Enfant(models.Model):
     prenom = models.CharField(max_length=200)
