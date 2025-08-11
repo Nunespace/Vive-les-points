@@ -79,9 +79,9 @@ AUTHENTICATION_BACKENDS = [
 UNIQUE_USER_EMAIL = True
 AUTH_USER_MODEL = "auth.User"
 
-LOGIN_URL = "login"               # (par nom de route)
+LOGIN_URL = "famille:login"               # (par nom de route)
 LOGIN_REDIRECT_URL = "points:dashboard"          # où on atterrit après login
-LOGOUT_REDIRECT_URL = "login"
+LOGOUT_REDIRECT_URL = "famille:login"
 
 LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = "Europe/Paris"

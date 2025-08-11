@@ -11,7 +11,7 @@ from .models import Famille, Enfant, UserProfile
 from django.contrib.auth import get_user_model
 from django.utils.html import format_html, format_html_join
 
-
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -33,23 +33,43 @@ from django.conf import settings
 
 from .models import Famille, Enfant, UserProfile
 from .forms import FamilleForm, ParentInlineFormSet, EnfantFormSet, FamilyHardDeleteForm
+from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import reverse_lazy
+from django.conf import settings
+from django.contrib import messages
+
+from .forms import EmailAuthenticationForm
 User = get_user_model()
 
 
 class EmailLoginView(LoginView):
-    template_name = "famille/login.html"
+    template_name = "famille/login.html"   # adapte au chemin de ton template
     authentication_form = EmailAuthenticationForm
+    redirect_authenticated_user = True  # si déjà connecté, on redirige
 
     def form_valid(self, form):
-        messages.success(self.request, "Connexion réussie. Bienvenue !")
-        return super().form_valid(form)
+        """Gère la connexion et le paramètre 'remember me'."""
+        response = super().form_valid(form)
+        if self.request.POST.get("remember_me"):
+            self.request.session.set_expiry(60 * 60 * 24 * 30)  # 30 jours
+        else:
+            self.request.session.set_expiry(0)
+        messages.success(self.request, "Connexion réussie.")
+        return response
 
-    def form_invalid(self, form):
-        messages.error(self.request, "Identifiants invalides.")
-        return super().form_invalid(form)
+    def get_success_url(self):
+        # Respecte ?next=/... sinon redirige vers le tableau de bord
+        return self.get_redirect_url() or reverse_lazy("points:dashboard")
 
 
 email_login_view = EmailLoginView.as_view()
+
+
+class EmailLogoutView(LogoutView):
+    next_page = reverse_lazy("famille:login")  # adapte au nom de ta route d’accueil
+
+
+email_logout_view = EmailLogoutView.as_view()
 
 
 def _get_group(name):
@@ -70,7 +90,7 @@ class RegisterFamilyView(View):
 
     from django.utils.html import format_html
 
-    @transaction.atomic
+    @transaction.atomic  # assure que toutes les opérations sont atomiques (rollback si erreur dans au moins un formulaire)
     def post(self, request):
         famille_form = FamilleForm(request.POST)
         parent_formset = ParentFormSet(request.POST, prefix="parents")
@@ -213,6 +233,7 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             "enfant_formset": enfant_formset,
         })
 
+
     @transaction.atomic
     def post(self, request):
         if not self._ensure_parent_access(request):
@@ -221,7 +242,7 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
 
         famille = request.user.profile.famille
 
-        # Gestion suppression de "mon compte" parent
+        # Suppression de mon compte ?
         if "delete_self" in request.POST:
             return self._delete_self_parent(request, famille)
 
@@ -229,7 +250,6 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
         parent_formset = ParentInlineFormSet(request.POST, prefix="parents")
         enfant_formset = EnfantFormSet(request.POST, instance=famille, prefix="enfants")
 
-        # injecter contexte famille pour validations email (ParentInlineForm.clean_email)
         for form in parent_formset:
             form.famille = famille
 
@@ -242,16 +262,38 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                 "enfant_formset": enfant_formset,
             })
 
-        # 1) Famille
-        famille_form.save()
+        # ---------- NOUVEAU : détection "aucun changement" ----------
+        def formset_changed(fs):
+            # True si au moins un form a changé, ou si ajout/suppression
+            any_changed = any(f.has_changed() for f in fs.forms)
+            # inline formset expose ces listes après validation
+            added = getattr(fs, "new_objects", [])
+            deleted = getattr(fs, "deleted_objects", []) or getattr(fs, "deleted_forms", [])
+            return any_changed or bool(added) or bool(deleted)
 
-        # 2) Parents (update / delete / add)
+        changed = False
+        if famille_form.has_changed():
+            changed = True
+        if formset_changed(parent_formset):
+            changed = True
+        if formset_changed(enfant_formset):
+            changed = True
+
+        if not changed:
+            messages.info(request, "Aucun changement détecté.")
+            return redirect("famille:manage_account")
+        # ------------------------------------------------------------
+
+        # 1) Famille
+        if famille_form.has_changed():
+            famille_form.save()
+
+        # 2) Parents
         parents_group = _get_group("parents")
         existing_parent_ids = set(self._parents_queryset(famille).values_list("id", flat=True))
-        to_keep_ids = set()
 
         for form in parent_formset:
-            if not form.cleaned_data:  # forms supprimés par management_form
+            if not form.cleaned_data:
                 continue
 
             del_flag = form.cleaned_data.get("DELETE")
@@ -261,34 +303,43 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             email      = form.cleaned_data.get("email")
             new_pwd    = form.cleaned_data.get("new_password")
 
-            if user_id:  # édition / suppression d'un parent existant
+            if user_id:
                 user = get_object_or_404(User, pk=user_id)
                 if del_flag:
-                    # garde-fou: empêcher de supprimer le dernier parent
+                    # garde-fou déjà en place dans ton code…
                     if existing_parent_ids - {user.id}:
-                        # OK il reste d'autres parents
-                        user.delete()  # cascade supprime UserProfile grâce au OneToOne
+                        user.delete()
                         existing_parent_ids.discard(user.id)
                     else:
                         messages.error(request, "Impossible de supprimer le dernier parent. Ajoutez d'abord un autre parent.")
                         raise transaction.TransactionManagementError("last-parent-guard")
                 else:
-                    # update
+                    # update champs
+                    if (user.first_name != first_name or
+                        user.last_name  != last_name  or
+                        user.email      != email or
+                        user.username   != email):
+                        changed = True
                     user.first_name = first_name
-                    user.last_name = last_name
-                    user.email = email
-                    user.username = email  # si email = identifiant
+                    user.last_name  = last_name
+                    user.email      = email
+                    user.username   = email
                     if new_pwd:
                         user.set_password(new_pwd)
+                        changed = True
                     user.save()
-                    # s’assurer du group + profil
                     user.groups.add(parents_group)
                     UserProfile.objects.get_or_create(user=user, defaults={"famille": famille, "role": "parent"})
-                    to_keep_ids.add(user.id)
+
+                    # ---------- NOUVEAU : rester connecté si je change MON mot de passe ----------
+                    if new_pwd and user.pk == request.user.pk:
+                        update_session_auth_hash(request, user)
+                    # ---------------------------------------------------------------------------
+
             else:
                 if del_flag:
-                    continue  # ligne vide marquée delete : ignorer
-                # ajout d'un nouveau parent
+                    continue
+                # ajout
                 password = new_pwd or User.objects.make_random_password()
                 new_user = User.objects.create_user(
                     username=email, email=email, password=password,
@@ -296,14 +347,15 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                 )
                 new_user.groups.add(parents_group)
                 UserProfile.objects.create(user=new_user, famille=famille, role="parent")
-                to_keep_ids.add(new_user.id)
-                existing_parent_ids.add(new_user.id)
+                changed = True
 
         # 3) Enfants
+        # inline formset: save() gère add/update/delete et a déjà validé
         enfant_formset.save()
 
         messages.success(request, "Compte famille mis à jour.")
-        return redirect("famille:manage_account")
+        return redirect("points:dashboard")
+
 
     def _delete_self_parent(self, request, famille):
         """Supprime le compte du parent connecté (mais pas la famille).

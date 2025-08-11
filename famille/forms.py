@@ -135,6 +135,9 @@ EnfantFormSet = inlineformset_factory(
         "prenom": forms.TextInput(attrs={"class": "form-control"}),
         "solde_points": forms.NumberInput(attrs={"class": "form-control"}),
     },
+    labels={
+        "DELETE": "Retirer de la famille"
+    }
 )
 
 class FamilyHardDeleteForm(forms.Form):

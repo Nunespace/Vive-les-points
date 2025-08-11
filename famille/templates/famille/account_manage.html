@@ -2,7 +2,57 @@
 
 {% block content %}
 <div class="container my-4 pb-5">
-  <h1 class="display-6 fw-bold mb-3">Mon compte famille</h1>
+  <h1 class="page-title display-6 mb-3">
+    <span class="title-chip">Mon compte famille</span>
+  </h1>
+
+  {# Bloc global d'erreurs #}
+  {% if famille_form.errors or parent_formset.errors or parent_formset.non_form_errors or enfant_formset.errors or enfant_formset.non_form_errors %}
+    <div class="alert alert-danger">
+      <strong>Merci de corriger les erreurs suivantes :</strong>
+      <ul class="mb-0">
+        {# Erreurs famille #}
+        {% for field in famille_form %}
+          {% for error in field.errors %}
+            <li>Famille – {{ field.label }} : {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in famille_form.non_field_errors %}
+          <li>Famille – {{ error }}</li>
+        {% endfor %}
+
+        {# Erreurs parents #}
+        {% for form in parent_formset %}
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li>Parents – {{ field.label }} : {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>Parents – {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in parent_formset.non_form_errors %}
+          <li>Parents – {{ error }}</li>
+        {% endfor %}
+
+        {# Erreurs enfants #}
+        {% for form in enfant_formset %}
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li>Enfants – {{ field.label }} : {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>Enfants – {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in enfant_formset.non_form_errors %}
+          <li>Enfants – {{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 
   <form method="post" novalidate>
     {% csrf_token %}
@@ -47,7 +97,7 @@
               </div>
             </div>
             <div class="form-check mt-2">
-              {{ form.DELETE }} <label class="form-check-label">Supprimer ce parent</label>
+              {{ form.DELETE }} <label class="form-check-label">Retirer ce parent (données supprimées)</label>
             </div>
           </div>
         {% endfor %}
@@ -63,6 +113,7 @@
         {{ enfant_formset.management_form }}
         {% for form in enfant_formset.forms %}
           <div class="border rounded p-3 mb-3 enfant-form">
+            {{ form.id }} {# important pour l’inline formset #}
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label">Prénom</label>{{ form.prenom }}
@@ -74,7 +125,7 @@
               </div>
             </div>
             <div class="form-check mt-2">
-              {{ form.DELETE }} <label class="form-check-label">Supprimer cet enfant</label>
+              {{ form.DELETE }} <label class="form-check-label">Retirer de la famille</label>
             </div>
           </div>
         {% endfor %}
@@ -94,7 +145,7 @@
 </div>
 
 <script>
-  // Ajouter une ligne parent
+  // Ajouter un parent
   document.getElementById('add-parent').addEventListener('click', () => {
     const container = document.getElementById('parents-container');
     const totalInput = container.querySelector('input[name="parents-TOTAL_FORMS"]');
@@ -112,13 +163,13 @@
     totalInput.value = total + 1;
   });
 
-  // Ajouter une ligne enfant
+  // Ajouter un enfant
   document.getElementById('add-enfant').addEventListener('click', () => {
     const container = document.getElementById('enfants-container');
     const totalInput = container.querySelector('input[name="enfants-TOTAL_FORMS"]');
     const total = parseInt(totalInput.value, 10);
-    const emptyTemplate = container.querySelector('.enfant-form');
-    const clone = emptyTemplate.cloneNode(true);
+    const first = container.querySelector('.enfant-form');
+    const clone = first.cloneNode(true);
 
     clone.querySelectorAll('input').forEach(inp => {
       if (inp.type === 'checkbox') { inp.checked = false; return; }
