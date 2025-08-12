@@ -110,26 +110,35 @@
         <button type="button" class="btn btn-sm btn-outline-primary" id="add-enfant">+ Ajouter un enfant</button>
       </div>
       <div class="card-body" id="enfants-container">
-        {{ enfant_formset.management_form }}
-        {% for form in enfant_formset.forms %}
-          <div class="border rounded p-3 mb-3 enfant-form">
-            {{ form.id }} {# important pour l’inline formset #}
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">Prénom</label>{{ form.prenom }}
-                <div class="text-danger small">{{ form.prenom.errors }}</div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Solde points</label>{{ form.solde_points }}
-                <div class="text-danger small">{{ form.solde_points.errors }}</div>
-              </div>
+      {{ enfant_formset.management_form }}
+      {% for form in enfant_formset.forms %}
+        <div class="border rounded p-3 mb-3 enfant-form">
+          {{ form.id }}
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Prénom</label>{{ form.prenom }}
+              <div class="text-danger small">{{ form.prenom.errors }}</div>
             </div>
-            <div class="form-check mt-2">
-              {{ form.DELETE }} <label class="form-check-label">Retirer de la famille</label>
+            <div class="col-md-3">
+              <label class="form-label">Solde points</label>{{ form.solde_points }}
+              <div class="text-danger small">{{ form.solde_points.errors }}</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Email (facultatif)</label>{{ form.email }}
+              <div class="text-danger small">{{ form.email.errors }}</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Mot de passe</label>{{ form.new_password }}
+              <div class="text-danger small">{{ form.new_password.errors }}</div>
             </div>
           </div>
-        {% endfor %}
+          <div class="form-check mt-2">
+            {{ form.DELETE }} <label class="form-check-label">Retirer de la famille</label>
+          </div>
+        </div>
+      {% endfor %}
       </div>
+
     </div>
 
     <div class="d-flex gap-2 justify-content-end">

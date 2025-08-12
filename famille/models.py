@@ -20,14 +20,18 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.role}) - {self.famille}"
 
-
-
-    
+   
 
 class Enfant(models.Model):
     prenom = models.CharField(max_length=200)
     solde_points = models.IntegerField(default=0)
     famille = models.ForeignKey(Famille, on_delete=models.CASCADE)
+    user = models.OneToOneField(        # <-- NOUVEAU
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="profil_enfant"
+    )
 
     def __str__(self):
-        return self.prenom + " " + str(self.solde_points)
+        return f"{self.prenom} {self.solde_points}"

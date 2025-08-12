@@ -35,7 +35,7 @@ class NewPointsView(View):
 
     form_classes = [PointsPositifsCreationForm, PointsNegatifsCreationForm]
     template_name = "points/new_points.html"
-    success_url = "accueil"
+    success_url = "points:dashboard"
 
     def get(self, request, pk):
         """Réponds aux requêtes GET."""
