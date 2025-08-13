@@ -5,22 +5,85 @@ from django.urls import reverse
 from django.views.generic import View, ListView, DetailView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-
-# Importe Enfant depuis l'app famille (cohérent avec les mixins)
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from .models import BaremeRecompense, BaremePointPositif, BaremePointNegatif, Point_negatif, Point_positif
 from famille.models import Enfant
 from famille.mixins import EnfantFamilleMixin, get_user_famille
-
-# Les modèles de points restent dans l'app points
-from .models import Point_negatif, Point_positif
 from .forms import (
     PointsPositifsCreationForm,
     PointsNegatifsCreationForm,
 )
 
 
-def bareme(request):
-    """Vue gérant l'affichage du barème."""
-    return render(request, "points/bareme.html")
+@login_required
+def bareme_view(request):
+    # ⚠️ Juste pour démarrer : on remplit si vide
+    if not BaremeRecompense.objects.exists():
+        BaremeRecompense.objects.bulk_create([
+            BaremeRecompense(points=1,  valeur_euros="1€",                    valeur_temps="10 minutes"),
+            BaremeRecompense(points=5,  valeur_euros="5€ (+/- 2€ si cadeau)", valeur_temps="50 minutes"),
+            BaremeRecompense(points=10, valeur_euros="10€ (+/- 5€ si cadeau)",valeur_temps="100 minutes"),
+        ])
+    if not BaremePointPositif.objects.exists():
+        BaremePointPositif.objects.bulk_create([
+            BaremePointPositif(motif="Ranger sa chambre", points=1),
+            BaremePointPositif(motif="Aider aux tâches ménagères", points=1),
+            BaremePointPositif(motif="Être à l'heure toute la semaine", points=1),
+        ])
+    if not BaremePointNegatif.objects.exists():
+        BaremePointNegatif.objects.bulk_create([
+            BaremePointNegatif(motif="N'écoute pas ses parents", points=-1),
+            BaremePointNegatif(motif="Grossier envers ses parents", points=-3),
+        ])
+
+    return render(request, "points/bareme.html", {
+        "recompenses": BaremeRecompense.objects.all(),
+        "positifs": BaremePointPositif.objects.all(),
+        "negatifs": BaremePointNegatif.objects.all(),
+    })
+
+
+@login_required
+def update_cell(request, model_name, pk, field):
+    model_map = {
+        "recompense": BaremeRecompense,
+        "positif": BaremePointPositif,
+        "negatif": BaremePointNegatif,
+    }
+    if model_name not in model_map:
+        return HttpResponseBadRequest("Model inconnu")
+
+    model = model_map[model_name]
+    obj = get_object_or_404(model, pk=pk)
+
+    # Pour reconstituer l'URL d'édition dans les templates
+    ctx = {
+        "model_name": model_name,
+        "pk": obj.pk,
+        "field": field,
+    }
+
+    if request.method == "POST":
+        value = request.POST.get("value", "")
+        # Cast basique si champ 'points'
+        if field == "points":
+            try:
+                value = int(value)
+            except ValueError:
+                # renvoyer la cellule en mode lecture inchangée
+                ctx["value"] = getattr(obj, field)
+                return render(request, "points/cell_value.html", ctx)
+
+        setattr(obj, field, value)
+        obj.save()
+        ctx["value"] = getattr(obj, field)
+        # 🔁 Retourne la cellule en mode lecture (un <td> complet)
+        return render(request, "points/cell_value.html", ctx)
+
+    # GET → retourne la cellule en mode édition (un <td> avec <form>)
+    ctx["value"] = getattr(obj, field)
+    return render(request, "points/cell_form.html", ctx)
 
 
 class IndexView(LoginRequiredMixin, PermissionRequiredMixin, EnfantFamilleMixin, ListView):

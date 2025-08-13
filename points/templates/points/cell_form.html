@@ -1,0 +1,20 @@
+{% load static %}
+<td>
+  <form
+    hx-post="{% url 'points:update_cell' model_name pk field %}"
+    hx-target="closest td"
+    hx-swap="outerHTML"
+    class="d-flex gap-2 align-items-center">
+    {% csrf_token %}
+    <input type="text" name="value" value="{{ value }}" class="form-control form-control-sm" autofocus>
+    <button type="submit" class="btn btn-sm btn-primary">OK</button>
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-secondary"
+      hx-get="{% url 'points:update_cell' model_name pk field %}"
+      hx-target="closest td"
+      hx-swap="outerHTML">
+      Annuler
+    </button>
+  </form>
+</td>

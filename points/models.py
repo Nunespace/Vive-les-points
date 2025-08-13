@@ -5,6 +5,29 @@ from django.utils import timezone
 from famille.models import Enfant
 
 
+class BaremeRecompense(models.Model):
+    points = models.PositiveIntegerField()
+    valeur_euros = models.CharField(max_length=200)
+    valeur_temps = models.CharField(max_length=200)
+
+    def __str__(self):
+        return f"{self.points} points"
+
+class BaremePointPositif(models.Model):
+    motif = models.CharField(max_length=1000)
+    points = models.IntegerField(default=1)  # toujours positif
+
+    def __str__(self):
+        return self.motif
+
+class BaremePointNegatif(models.Model):
+    motif = models.CharField(max_length=1000)
+    points = models.IntegerField(default=-1)  # toujours négatif
+
+    def __str__(self):
+        return self.motif
+
+
 class Point_positif(models.Model):
     motif1 = models.CharField(max_length=1000, null=True, blank=True, verbose_name="Motif")
     nb_positif = models.IntegerField(default=0, verbose_name="Nombre")

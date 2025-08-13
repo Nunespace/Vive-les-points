@@ -1,0 +1,7 @@
+<!-- points/templates/points/edit_cell.html -->
+ {% load attr_extras %}
+
+<form hx-post="" hx-target="this" hx-swap="outerHTML" class="d-flex gap-2">
+  <input type="text" name="value" value="{{ value }}" class="form-control form-control-sm" autofocus>
+  <button type="submit" class="btn btn-sm btn-primary">OK</button>
+</form>

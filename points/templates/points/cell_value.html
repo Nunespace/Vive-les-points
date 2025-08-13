@@ -1,0 +1,8 @@
+<td
+  hx-get="{% url 'points:update_cell' model_name pk field %}"
+  hx-trigger="click"
+  hx-target="this"
+  hx-swap="outerHTML"
+  style="cursor:pointer">
+  {{ value }}
+</td>

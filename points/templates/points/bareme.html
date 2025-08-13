@@ -1,76 +1,53 @@
-{% extends 'base.html' %}
-
+<!-- points/templates/points/bareme.html -->
+{% extends "base.html" %}
 {% block content %}
-<div class="container">
-    <div class="row p-3 mb-3">
-        <table class=" table table-light table-striped table-hover mx-auto pb-5">
-            <caption class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Barême des récompenses</caption>
-            <thead>
-                <tr>
-                    <th scope="col">Nombre de points</th>
-                    <th scope="col">Valeur en €</th>
-                    <th scope="col">Valeur en temps de jeu vidéo <br>(3 points/jour max)</th>
-                </tr>
-            </thead>
-            <tr>
-                <td>1</td>
-                <td>1€</td>
-                <td>10 minutes</td>
-            </tr>
-            <tr>
-                <td>5</td>
-                <td>5€ (+ ou - 2€ si cadeau)</td>
-                <td>50 minutes</td>
-            </tr>
-            <tr>
-                <td>10</td>
-                <td>10€ (+ ou - 5€ si cadeau)</td>
-                <td>100 minutes</td>
-            </tr>
-            
-        </table>
-    </div>
-    <div class="row p-3 mb-3">
-        <table class="table table-light table-striped table-hover mx-auto">
-            <caption  class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Barême des points positifs</caption>
-            <thead>
-                <tr>
-                    <th scope="col">Motif</th>
-                    <th scope="col">Nombre de points attribuables</th>
-                </tr>
-            </thead>
-            <tr>
-                <td>Ranger sa chambre</td>
-                <td>+1</td>
-            </tr>
-            <tr>
-                <td>Aider aux tâches ménagères (vaisselle, linge, etc.)</td>
-                <td>+1</td>
-            </tr>
-            <tr>
-                <td>Etre à l'heure le matin TOUTE la semaine pour aller à l'école, sans crise</td>
-                <td>+1</td>
-            </tr>
-        </table>
-    </div>
-    <div class="row p-3 mb-3">
-        <table class="table table-light table-striped table-hover mx-auto">
-            <caption  class="text-center" style="caption-side:top; font-family: 'Bungee Spice', sans-serif; background-color: cornsilk;">Barême des points négatifs</caption>
-            <thead>
-                <tr>
-                    <th scope="col">Motif</th>
-                    <th scope="col">Nombre de points en moins</th>
-                </tr>
-            </thead>
-            <tr>
-                <td>Ne pas écouter ses parents(ne met pas les couverts, ne range pas qq chose....)</td>
-                <td>-1</td>
-            </tr>
-            <tr>
-                <td>Etre grossier envers ses parents</td>
-                <td>-3</td>
-            </tr>
-        </table>
-    </div>
+<div class="container my-4">
+  <h2 class="page-title page-title-contrast">
+    <span class="title-chip">Barème des récompenses</span>
+  </h2>
+  <table class="table table-light table-striped table-hover">
+    <thead>
+      <tr><th>Points</th><th>€</th><th>Temps</th></tr>
+    </thead>
+    <tbody>
+      {% for r in recompenses %}
+      <tr>
+        <td hx-get="{% url 'points:update_cell' 'recompense' r.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ r.points }}</td>
+        <td hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_euros' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ r.valeur_euros }}</td>
+        <td hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_temps' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ r.valeur_temps }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 class="page-title page-title-contrast">
+    <span class="title-chip">Barème des points positifs</span>
+  </h2>
+  <table class="table table-light table-striped table-hover">
+    <thead><tr><th>Motif</th><th>Points</th></tr></thead>
+    <tbody>
+      {% for p in positifs %}
+      <tr>
+        <td hx-get="{% url 'points:update_cell' 'positif' p.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ p.motif }}</td>
+        <td hx-get="{% url 'points:update_cell' 'positif' p.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ p.points }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 class="page-title page-title-contrast">
+    <span class="title-chip">Barème des points négatifs</span>
+  </h2>
+  <table class="table table-light table-striped table-hover">
+    <thead><tr><th>Motif</th><th>Points</th></tr></thead>
+    <tbody>
+      {% for n in negatifs %}
+      <tr>
+        <td hx-get="{% url 'points:update_cell' 'negatif' n.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ n.motif }}</td>
+        <td hx-get="{% url 'points:update_cell' 'negatif' n.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ n.points }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-{% endblock content %}
+{% endblock %}
