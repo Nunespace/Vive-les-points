@@ -5,15 +5,49 @@ from famille.models import Enfant
 
 
 # --- Utils ---
+# --- Utils ---
 def get_user_famille(request):
     """
-    Récupère la famille de l'utilisateur à partir de la requête.
+    Récupère l'objet Famille associé à l'utilisateur courant.
+    Essaie d'abord via le profil parent (UserProfile : user.profile.famille),
+    puis via le profil enfant (Enfant : user.profil_enfant.famille).
+    Retourne None si aucune famille n'est trouvée.
     """
+
+    # Récupère l'attribut "user" depuis l'objet request
+    # - Si "user" existe → renvoyé dans u
+    # - Sinon → valeur par défaut = None
     u = getattr(request, "user", None)
+
+    # Si aucun utilisateur ou si l'utilisateur n'est pas connecté (anonyme),
+    # on arrête immédiatement : il n'a pas de famille à retourner.
     if not u or not u.is_authenticated:
         return None
-    # Famille.user OneToOne -> related_name="user_famille"
-    return getattr(u, "user_famille", None)
+
+    # 1) Tentative de récupération via le profil "parent"
+    # - On vérifie que l'objet utilisateur a bien un attribut "profile"
+    # - On s'assure que ce profil est défini (non None)
+    # - On vérifie que la famille associée a un ID valide
+    try:
+        if hasattr(u, "profile") and u.profile and u.profile.famille_id is not None:
+            return u.profile.famille
+    except Exception:
+        # En cas d'erreur (profil absent, accès impossible, etc.), on ignore
+        pass
+
+    # 2) Tentative de récupération via le profil "enfant"
+    # - Même logique que pour le profil parent
+    try:
+        if hasattr(u, "profil_enfant") and u.profil_enfant and u.profil_enfant.famille_id is not None:
+            return u.profil_enfant.famille
+    except Exception:
+        # Idem : on ignore les erreurs éventuelles
+        pass
+
+    # Si aucun des deux cas n'a fonctionné, on retourne None
+    return None
+
+
 
 
 # ============= 1) ENFANT: accès limité à MA famille =============

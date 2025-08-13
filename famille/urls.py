@@ -9,7 +9,7 @@ app_name = "famille"
 urlpatterns = [
     path("login/",  email_login_view,  name="login"),
     path("logout/", email_logout_view, name="logout"),
-    path("inscription/", register_family_view, name="famille_register"),
+    path("inscription/", register_family_view, name="register"),
     path("compte/", family_manage_view, name="manage_account"),
     path("supprimer-famille/", family_delete_view, name="delete_family"),
     

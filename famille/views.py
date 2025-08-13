@@ -235,7 +235,10 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
         return bool(p and p.role == "parent")
 
     def _parents_queryset(self, famille):
-        return User.objects.filter(profile__famille=famille, profile__role="parent").order_by("id")
+        return User.objects.filter(
+            profile__famille=famille,
+            profile__role="parent"
+        ).order_by("id")
 
     # ---------- GET ----------
     def get(self, request):
@@ -247,7 +250,6 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                        f"session_key={getattr(request.session, 'session_key', None)}")
 
         famille = request.user.profile.famille
-
         famille_form = FamilleForm(instance=famille)
 
         parents = self._parents_queryset(famille)
@@ -259,7 +261,6 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             "DELETE": False,
         } for u in parents]
         parent_formset = ParentInlineFormSet(initial=parent_initial, prefix="parents")
-
         enfant_formset = EnfantInlineFormSet(instance=famille, prefix="enfants")
 
         return render(request, self.template_name, {
@@ -271,8 +272,6 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
     # ---------- POST ----------
     @transaction.atomic
     def post(self, request):
-        # mémorise l'utilisateur courant
-        current_user = request.user
         if not self._ensure_parent_access(request):
             messages.error(request, "Accès réservé aux parents.")
             return redirect("points:dashboard")
@@ -332,12 +331,11 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
         parents_group = _get_group("parents")
         existing_parent_ids = set(self._parents_queryset(famille).values_list("id", flat=True))
 
-        touched_current_user = False
-
         # Parents
         for form in parent_formset:
             if not form.cleaned_data:
                 continue
+
             del_flag = form.cleaned_data.get("DELETE")
             user_id = form.cleaned_data.get("user_id")
             first = form.cleaned_data.get("first_name")
@@ -359,11 +357,18 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                     user.last_name = last
                     user.email = email
                     user.username = email
+
+                    password_changed_for_current = False
                     if new_pwd:
                         user.set_password(new_pwd)
+                        if user.pk == request.user.pk:
+                            password_changed_for_current = True
+
                     user.save()
-                    if user.pk == request.user.pk:
-                        touched_current_user = True
+
+                    if password_changed_for_current:
+                        update_session_auth_hash(request, user)
+
                     user.groups.add(parents_group)
                     UserProfile.objects.get_or_create(user=user, defaults={"famille": famille, "role": "parent"})
             else:
@@ -393,22 +398,6 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             inst.save()
             form.save_user(famille)
 
-        logger.warning(f"[ACCOUNT] Before update_session_auth_hash: auth={request.user.is_authenticated} "
-                       f"session_key={getattr(request.session, 'session_key', None)} "
-                       f"touched_current_user={touched_current_user}")
-
-        if touched_current_user:
-            update_session_auth_hash(request, request.user)
-            request.user.refresh_from_db()
-        
-        logger.warning(f"[ACCOUNT] After update_session_auth_hash: auth={request.user.is_authenticated} "
-                       f"session_key={getattr(request.session, 'session_key', None)}")
-
-        # Force backend si besoin
-        backend = getattr(settings, "AUTHENTICATION_BACKENDS", ["django.contrib.auth.backends.ModelBackend"])[0]
-        login(request, request.user, backend=backend)
-        request.user.refresh_from_db()
-
         logger.warning(f"[ACCOUNT][POST] end: auth={request.user.is_authenticated} "
                        f"session_key={getattr(request.session, 'session_key', None)}")
 
@@ -427,8 +416,8 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
         return redirect("points:dashboard")
 
 
-
 family_manage_view = ManageFamilyAccountView.as_view()
+
 
 
 # ===================================================================
