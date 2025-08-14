@@ -13,6 +13,7 @@ pymysql = "*"
 django-unique-user-email = "*"
 flake8-tidy-imports = "*"
 flake8 = "*"
+argon2-cffi = "*"
 
 [dev-packages]
 pytest-django = "*"

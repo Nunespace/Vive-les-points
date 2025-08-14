@@ -6,10 +6,14 @@ from . import BASE_DIR
 from . import env
 #import pymysql
 
+#pymysql.install_as_MySQLdb()
 
-SECRET_KEY = "django-insecure-w4=l$gl&jcbn$((dh-x1afur3(!l-%twsa6wcvav_loi959*f%"
+#SECRET_KEY = "django-insecure-w4=l$gl&jcbn$((dh-x1afur3(!l-%twsa6wcvav_loi959*f%"
 
-DEBUG = False
+# DEBUG:
+# De base, on désactive le mode DEBUG pour éviter les oublis en production
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#debug
+DEBUG = env.bool("DJANGO_DEBUG", False)
 
 ALLOWED_HOSTS = []
 
@@ -31,6 +35,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -72,6 +77,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# MOTS DE PASSE
+# Configuration du chiffrement des mots de passe
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#password-hashers
+PASSWORD_HASHERS = [
+    # Argon2 n’est pas l’algorithme utilisé par défaut dans Django car il
+    # nécessite une bibliothèque tierce (argon2-cffi). Les experts de Password
+    # Hashing Competition recommandent cependant l’utilisation immédiate de
+    # Argon2 plutôt que les autres algorithmes pris en charge par Django.
+    # https://docs.djangoproject.com/fr/5.1/topics/auth/passwords/#using-argon2-with-django
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+]
+
+
 AUTHENTICATION_BACKENDS = [
     "unique_user_email.backend.EmailBackend",
     "django.contrib.auth.backends.ModelBackend",
@@ -89,23 +110,150 @@ TIME_ZONE = "Europe/Paris"
 USE_I18N = True
 USE_TZ = True
 
+USE_THOUSAND_SEPARATOR = True
+
+# Formate les dates en français et en UTF-8 (ex: pour que le é de décembre s'affiche correctement)
+locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+
+# FICHIERS STATIQUES ET MEDIA (CSS, JavaScript, Images)
+# Les sites Web ont généralement besoin de servir des fichiers supplémentaires
+# tels que des images, du JavaScript ou du CSS. Dans Django, ces fichiers
+# sont appelés « fichiers statiques ». Django met à disposition l'app
+# django.contrib.staticfiles pour vous assister dans cette gestion.
+# https://docs.djangoproject.com/fr/5.1/howto/static-files/
+
+# Le chemin absolu vers le répertoire dans lequel collectstatic rassemble les fichiers statiques en
+# vue du déploiement.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#static-root
+STATIC_ROOT = Path(
+    env("DJANGO_STATIC_ROOT", default=str(BASE_DIR / "staticfiles"))
+)
 STATIC_URL = "static/"
 
+# Ce réglage définit les emplacements supplémentaires que l’application
+# staticfiles parcourt. Cela permet de servir des fichiers statiques à partir
+# de plusieurs emplacements pour le développement (facultatif)
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#staticfiles-dirs
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# SECURITE
+# Indique si le drapeau HttpOnly doit être utilisé sur le cookie de session.
+# Si ce paramètre est défini à True, le code JavaScript côté client ne sera
+# pas en mesure d’accéder au cookie de session.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#session-cookie-httponly
+SESSION_COOKIE_HTTPONLY = True
+
+# Indique si le drapeau HttpOnly doit être utilisé sur le cookie CSRF. Si ce
+# paramètre est défini à True, le JavaScript côté client ne sera pas en mesure
+# d’accéder au cookie CSRF.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#csrf-cookie-httponly
+CSRF_COOKIE_HTTPONLY = False
+
+# Ferme la session lorsque le navigateur est fermé
+# réf. : https://docs.djangoproject.com/fr/5.1/topics/http/sessions/#browser-length-sessions-vs-persistent-sessions
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Durée de vie des cookies de session en secondes
+# Réf. : https://docs.djangoproject.com/fr/5.1/ref/settings/#session-cookie-age
+SESSION_COOKIE_AGE = 60 * 60 * 24  # 1 jour
+
+# Valeur par défaut de l’en-tête X-Frame-Options utilisé par
+# XFrameOptionsMiddleware pour se protéger contre le
+# détournement de click (clickjacking)
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#x-frame-options
+# L'option "SAMEORIGIN" permet de restreindre le chargement de la page dans un iframe
+# uniquement si l'origine de la requête est la même que celle de la page.
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
+
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# Qui reçoit les erreurs serveur (500) par email
+ADMINS = [("Mathieu Cazenave", "nunespace@gmail.com")]
+MANAGERS = ADMINS
+
+
+# Expéditeur et préfixe des sujets
+SERVER_EMAIL = "errors@dgpython.fr"          # From des mails d’erreurs
+DEFAULT_FROM_EMAIL = "no-reply@dgpython.fr"  # From par défaut de ton site
+EMAIL_SUBJECT_PREFIX = "[Vive les Points] "
+
+# Backend email (exemple SMTP générique — remplace par ton fournisseur)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.ton-fournisseur.tld"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "no-reply@dgpython.fr"
+EMAIL_HOST_PASSWORD = "********"
+EMAIL_USE_TLS = True
+
+MIDDLEWARE += ["django.middleware.common.BrokenLinkEmailsMiddleware"]
+
+# Évite le spam (favicon, robots, etc.)
+import re
+IGNORABLE_404_URLS = [
+    re.compile(r"^/favicon\.ico$"),
+    re.compile(r"^/robots\.txt$"),
+    re.compile(r"^/apple-touch-icon.*\.png$"),
+    re.compile(r"^/\.well-known/.*$"),
+]
+
+
+env.read_env(BASE_DIR / ".env")
+
+DJANGO_LOG_LEVEL = env("DJANGO_LOG_LEVEL", default="INFO")
+
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    # N’envoie des mails que si DEBUG=False
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
+    },
+
+    "handlers": {
+        # Console partout (dev et prod)
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+        # Emails aux ADMINS pour erreurs HTTP 500 en prod
+        "mail_admins": {
+            "level": "ERROR",
+            "filters": ["require_debug_false"],
+            "class": "django.utils.log.AdminEmailHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
+
+    # Niveau par défaut
+    "root": {
+        "handlers": ["console"],
+        "level": DJANGO_LOG_LEVEL,
+    },
+
+    "loggers": {
+        # Erreurs de requêtes (500) => mail + console
+        "django.request": {
+            "handlers": ["mail_admins", "console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+
+        # Tes apps : simple et lisible
+        "famille": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        "points": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
     },
 }
