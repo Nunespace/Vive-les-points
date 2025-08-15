@@ -46,9 +46,9 @@ REFERRER_POLICY = env("DJANGO_SECURE_REFERRER_POLICY", default="strict-origin-wh
 EMAIL_CONFIG = env.email("DJANGO_EMAIL_URL", default="consolemail://")
 globals().update(**EMAIL_CONFIG)
 
-DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="dgpython <noreply@dgpython.fr>")
+DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="Vive les points <mathieu@vive-les-points.fr>")
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
-EMAIL_SUBJECT_PREFIX = env("DJANGO_EMAIL_SUBJECT_PREFIX", default="[dgpython] ")
+EMAIL_SUBJECT_PREFIX = env("DJANGO_EMAIL_SUBJECT_PREFIX", default="[Vive les points] ")
 
 ADMIN_URL = env("DJANGO_ADMIN_URL")
 
