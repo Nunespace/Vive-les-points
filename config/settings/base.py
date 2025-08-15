@@ -130,13 +130,6 @@ STATIC_ROOT = Path(
 )
 STATIC_URL = "static/"
 
-# Ce réglage définit les emplacements supplémentaires que l’application
-# staticfiles parcourt. Cela permet de servir des fichiers statiques à partir
-# de plusieurs emplacements pour le développement (facultatif)
-# https://docs.djangoproject.com/fr/5.1/ref/settings/#staticfiles-dirs
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
