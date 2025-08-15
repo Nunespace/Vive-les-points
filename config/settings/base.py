@@ -122,8 +122,58 @@ locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 # django.contrib.staticfiles pour vous assister dans cette gestion.
 # https://docs.djangoproject.com/fr/5.1/howto/static-files/
 
+# Le chemin absolu vers le répertoire dans lequel collectstatic rassemble les fichiers statiques en
+# vue du déploiement.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#static-root
+STATIC_ROOT = Path(
+    env("DJANGO_STATIC_ROOT", default=str(BASE_DIR / "staticfiles"))
+)
 
-STATIC_URL = "static/"
+# URL utilisée pour se référer aux fichiers statiques se trouvant dans
+# STATIC_ROOT.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#static-url
+STATIC_URL = "/static/"
+
+# Ce réglage définit les emplacements supplémentaires que l’application
+# staticfiles parcourt. Cela permet de servir des fichiers statiques à partir
+# de plusieurs emplacements pour le développement (facultatif)
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#staticfiles-dirs
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+# La configuration STORAGES définit les backends de stockage pour les fichiers
+# par défaut et les fichiers statiques dans une application Django.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#storages
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# Liste des moteurs de découverte sachant retrouver les fichiers statiques
+# en divers endroits.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#staticfiles-finders
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
+
+# FICHIERS DE MEDIA
+
+# Chemin absolu de répertoire pointant vers le répertoire qui contiendra les
+# fichiers uploadés par les utilisateurs.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#media-root
+MEDIA_ROOT = Path(env("DJANGO_MEDIA_ROOT", default=str(BASE_DIR / "media")))
+
+# URL qui gère les fichiers médias servis à partir de MEDIA_ROOT, utilisée pour
+# la gestion des fichiers stockés. Elle doit se terminer par une barre oblique
+# si elle ne contient pas de valeur vide.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#media-url
+MEDIA_URL = "/media/"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -156,7 +206,6 @@ SESSION_COOKIE_AGE = 60 * 60 * 24  # 1 jour
 # L'option "SAMEORIGIN" permet de restreindre le chargement de la page dans un iframe
 # uniquement si l'origine de la requête est la même que celle de la page.
 X_FRAME_OPTIONS = "SAMEORIGIN"
-
 
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

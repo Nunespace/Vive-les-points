@@ -3,8 +3,6 @@ from .base import *  # noqa
 import os
 import pymysql
 from .base import env
-from . import BASE_DIR
-from pathlib import Path
 
 # DB (o2switch + PyMySQL)
 pymysql.install_as_MySQLdb()
@@ -16,21 +14,13 @@ DATABASES["default"]["OPTIONS"] = {
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=0)
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-DEBUG = True
+DEBUG = env.bool("DJANGO_DEBUG", False)
 
 ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [f"https://{h.strip()}" for h in ALLOWED_HOSTS if h.strip()]
 
-# Le chemin absolu vers le répertoire dans lequel collectstatic rassemble les fichiers statiques en
-# vue du déploiement.
-# https://docs.djangoproject.com/fr/5.1/ref/settings/#static-root
 
-STATIC_URL = "/static/"
-STATIC_ROOT = env.path("DJANGO_STATIC_ROOT", default=BASE_DIR / "staticfiles")
-STATICFILES_DIRS = []  # pour ne pas hériter de base.py en prod
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = env.path("DJANGO_MEDIA_ROOT", default=BASE_DIR / "media")
 
 # Proxy/HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

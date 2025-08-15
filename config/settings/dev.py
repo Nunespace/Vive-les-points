@@ -18,13 +18,6 @@ INSTALLED_APPS += ["debug_toolbar"]
 MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE
 INTERNAL_IPS = ["127.0.0.1"]
 
-# Ce réglage définit les emplacements supplémentaires que l’application
-# staticfiles parcourt. Cela permet de servir des fichiers statiques à partir
-# de plusieurs emplacements pour le développement (facultatif)
-# https://docs.djangoproject.com/fr/5.1/ref/settings/#staticfiles-dirs
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
 
 
 # Ce dictionnaire contient toutes les autres options de configuration de
