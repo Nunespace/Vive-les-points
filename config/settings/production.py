@@ -20,7 +20,12 @@ DEBUG = True
 ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [f"https://{h.strip()}" for h in ALLOWED_HOSTS if h.strip()]
 
-STATIC_ROOT = env.path("DJANGO_STATIC_ROOT", default=BASE_DIR / "staticfiles")
+# Le chemin absolu vers le répertoire dans lequel collectstatic rassemble les fichiers statiques en
+# vue du déploiement.
+# https://docs.djangoproject.com/fr/5.1/ref/settings/#static-root
+STATIC_ROOT = Path(
+    env("DJANGO_STATIC_ROOT", default=str(BASE_DIR / "staticfiles"))
+)
 MEDIA_ROOT  = env.path("DJANGO_MEDIA_ROOT",  default=BASE_DIR / "media")
 MEDIA_URL = "/media/"
 

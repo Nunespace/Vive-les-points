@@ -122,12 +122,7 @@ locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 # django.contrib.staticfiles pour vous assister dans cette gestion.
 # https://docs.djangoproject.com/fr/5.1/howto/static-files/
 
-# Le chemin absolu vers le répertoire dans lequel collectstatic rassemble les fichiers statiques en
-# vue du déploiement.
-# https://docs.djangoproject.com/fr/5.1/ref/settings/#static-root
-STATIC_ROOT = Path(
-    env("DJANGO_STATIC_ROOT", default=str(BASE_DIR / "staticfiles"))
-)
+
 STATIC_URL = "static/"
 
 
