@@ -1,18 +1,31 @@
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
-from django.urls import reverse
-from django.views.generic import View, ListView, DetailView
+from django.views.generic import View, ListView
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+)
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from .models import BaremeRecompense, BaremePointPositif, BaremePointNegatif, Point_negatif, Point_positif
+from django.contrib.auth.decorators import permission_required
+from django.db.models import Sum
+
+from .models import (
+    BaremeRecompense,
+    BaremePointPositif,
+    BaremePointNegatif,
+    PointNegatif,
+    PointPositif,
+)
 from famille.models import Enfant
 from famille.mixins import EnfantFamilleMixin, get_user_famille
+
 from .forms import (
     PointsPositifsCreationForm,
     PointsNegatifsCreationForm,
+    PointPositifFormSet,
+    PointNegatifFormSet
 )
 
 
@@ -20,28 +33,56 @@ from .forms import (
 def bareme_view(request):
     # ⚠️ Juste pour démarrer : on remplit si vide
     if not BaremeRecompense.objects.exists():
-        BaremeRecompense.objects.bulk_create([
-            BaremeRecompense(points=1,  valeur_euros="1€",                    valeur_temps="10 minutes"),
-            BaremeRecompense(points=5,  valeur_euros="5€ (+/- 2€ si cadeau)", valeur_temps="50 minutes"),
-            BaremeRecompense(points=10, valeur_euros="10€ (+/- 5€ si cadeau)",valeur_temps="100 minutes"),
-        ])
+        BaremeRecompense.objects.bulk_create(
+            [
+                BaremeRecompense(
+                    points=1, valeur_euros="1€", valeur_temps="10 minutes"
+                ),
+                BaremeRecompense(
+                    points=5,
+                    valeur_euros="5€ (+/- 2€ si cadeau)",
+                    valeur_temps="50 minutes",
+                ),
+                BaremeRecompense(
+                    points=10,
+                    valeur_euros="10€ (+/- 5€ si cadeau)",
+                    valeur_temps="100 minutes",
+                ),
+            ]
+        )
     if not BaremePointPositif.objects.exists():
-        BaremePointPositif.objects.bulk_create([
-            BaremePointPositif(motif="Ranger sa chambre", points=1),
-            BaremePointPositif(motif="Aider aux tâches ménagères", points=1),
-            BaremePointPositif(motif="Être à l'heure toute la semaine", points=1),
-        ])
+        BaremePointPositif.objects.bulk_create(
+            [
+                BaremePointPositif(motif="Ranger sa chambre", points=1),
+                BaremePointPositif(
+                    motif="Aider aux tâches ménagères", points=1
+                ),
+                BaremePointPositif(
+                    motif="Être à l'heure toute la semaine", points=1
+                ),
+            ]
+        )
     if not BaremePointNegatif.objects.exists():
-        BaremePointNegatif.objects.bulk_create([
-            BaremePointNegatif(motif="N'écoute pas ses parents", points=-1),
-            BaremePointNegatif(motif="Grossier envers ses parents", points=-3),
-        ])
+        BaremePointNegatif.objects.bulk_create(
+            [
+                BaremePointNegatif(
+                    motif="N'écoute pas ses parents", points=-1
+                ),
+                BaremePointNegatif(
+                    motif="Grossier envers ses parents", points=-3
+                ),
+            ]
+        )
 
-    return render(request, "points/bareme.html", {
-        "recompenses": BaremeRecompense.objects.all(),
-        "positifs": BaremePointPositif.objects.all(),
-        "negatifs": BaremePointNegatif.objects.all(),
-    })
+    return render(
+        request,
+        "points/bareme.html",
+        {
+            "recompenses": BaremeRecompense.objects.all(),
+            "positifs": BaremePointPositif.objects.all(),
+            "negatifs": BaremePointNegatif.objects.all(),
+        },
+    )
 
 
 @login_required
@@ -86,26 +127,21 @@ def update_cell(request, model_name, pk, field):
     return render(request, "points/cell_form.html", ctx)
 
 
-class IndexView(LoginRequiredMixin, PermissionRequiredMixin, EnfantFamilleMixin, ListView):
+class IndexView(
+    LoginRequiredMixin, PermissionRequiredMixin, EnfantFamilleMixin, ListView
+):
     """
     Liste uniquement les enfants de MA famille
     grâce à EnfantFamilleMixin.get_queryset().
     """
+
     template_name = "points/index.html"
     context_object_name = "enfants_list"
     model = Enfant  # super().get_queryset() => Enfant.objects.all(), puis filtré par le mixin
-    permission_required = ("points.view_point_positif", "points.view_point_negatif")
-
-
-class DetailView(LoginRequiredMixin, PermissionRequiredMixin, EnfantFamilleMixin, DetailView):
-    """
-    Détail d’un enfant de sa famille (historique).
-    L’accès est bloqué si l’enfant n’appartient pas à l’utilisateur.
-    """
-    model = Enfant
-    template_name = "points/historique.html"
-    context_object_name = "enfant"
-    permission_required = ("famille.view_enfant", "points.view_point_positif", "points.view_point_negatif")
+    permission_required = (
+        "points.view_point_positif",
+        "points.view_point_negatif",
+    )
 
 
 class NewPointsView(LoginRequiredMixin, PermissionRequiredMixin, View):
@@ -113,6 +149,7 @@ class NewPointsView(LoginRequiredMixin, PermissionRequiredMixin, View):
     Création de nouveaux points pour un enfant donné (pk).
     On vérifie explicitement que l'enfant appartient bien à MA famille.
     """
+
     form_classes = [PointsPositifsCreationForm, PointsNegatifsCreationForm]
     template_name = "points/new_points.html"
     success_url = "points:dashboard"
@@ -130,7 +167,9 @@ class NewPointsView(LoginRequiredMixin, PermissionRequiredMixin, View):
             return enfant
         famille = get_user_famille(request)
         if not famille or enfant.famille_id != famille.id:
-            raise PermissionDenied("Cet enfant n'appartient pas à votre famille.")
+            raise PermissionDenied(
+                "Cet enfant n'appartient pas à votre famille."
+            )
         return enfant
 
     def get(self, request, pk):
@@ -167,15 +206,21 @@ class NewPointsView(LoginRequiredMixin, PermissionRequiredMixin, View):
                 saved_any = True
 
             # Mets à jour le solde une seule fois (delta)
-            delta = getattr(point_positif, "nb_positif", 0) - getattr(point_negatif, "nb_negatif", 0)
+            delta = getattr(point_positif, "nb_positif", 0) - getattr(
+                point_negatif, "nb_negatif", 0
+            )
             if delta != 0:
                 enfant.solde_points = (enfant.solde_points or 0) + delta
                 enfant.save(update_fields=["solde_points"])
 
             if saved_any:
-                messages.success(request, "Les points ont bien été enregistrés.")
+                messages.success(
+                    request, "Les points ont bien été enregistrés."
+                )
             else:
-                messages.info(request, "Aucun point n’a été ajouté (valeurs à 0).")
+                messages.info(
+                    request, "Aucun point n’a été ajouté (valeurs à 0)."
+                )
 
             return redirect(self.success_url)
 
@@ -188,3 +233,45 @@ class NewPointsView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
 
 new_points_view = NewPointsView.as_view()
+
+
+@login_required
+@permission_required(["points.change_point_positif", "points.change_point_negatif"], raise_exception=True)
+def historique_editable(request, pk):
+    enfant = get_object_or_404(
+        Enfant,
+        pk=pk,
+        famille=request.user.profile.famille
+    )
+
+    qs_pos = PointPositif.objects.filter(enfant=enfant).order_by("-date", "-id")
+    qs_neg = PointNegatif.objects.filter(enfant=enfant).order_by("-date", "-id")
+
+    if request.method == "POST":
+        pos_fs = PointPositifFormSet(request.POST, prefix="pp", queryset=qs_pos)
+        neg_fs = PointNegatifFormSet(request.POST, prefix="pn", queryset=qs_neg)
+        if pos_fs.is_valid() and neg_fs.is_valid():
+            pos_fs.save()
+            neg_fs.save()
+
+            # Recalcul du solde
+            total_pos = PointPositif.objects.filter(enfant=enfant).aggregate(total=Sum("nb_positif"))["total"] or 0
+            total_neg = PointNegatif.objects.filter(enfant=enfant).aggregate(total=Sum("nb_negatif"))["total"] or 0
+            enfant.solde_points = total_pos - total_neg
+            enfant.save(update_fields=["solde_points"])
+            # Message de succès
+            messages.success(request, "Modifications enregistrées ✅")
+            return redirect("points:historique", pk=enfant.id)
+
+        else:
+            print("errors :", pos_fs.errors)
+            print("errors :", neg_fs.errors)
+    else:
+        pos_fs = PointPositifFormSet(prefix="pp", queryset=qs_pos)
+        neg_fs = PointNegatifFormSet(prefix="pn", queryset=qs_neg)
+
+    return render(request, "points/historique.html", {
+        "enfant": enfant,
+        "pos_fs": pos_fs,
+        "neg_fs": neg_fs,
+    })

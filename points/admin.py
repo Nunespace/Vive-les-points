@@ -1,9 +1,7 @@
 from django.contrib import admin
 
-from .models import Point_negatif, Point_positif
+from .models import PointNegatif, PointPositif
 
 
-admin.site.register(Point_positif)
-admin.site.register(Point_negatif)
-
-
+admin.site.register(PointPositif)
+admin.site.register(PointNegatif)

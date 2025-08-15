@@ -30,7 +30,7 @@
   </style>
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
   <header>
     <div class="container">
       <a class="text-center" href="{% url 'points:dashboard' %}">
@@ -39,7 +39,7 @@
     </div>
   </header>
 
-  <main>
+  <main class="flex-grow-1">
     {% if messages %}
       <div class="alerts-stack position-sticky top-0 start-0 end-0" style="z-index:1080;">
         <div class="container pt-2">
@@ -56,47 +56,75 @@
     {% block content %}{% endblock content %}
   </main>
 
-  <footer class="bg-warning text-center border mt-auto">
-    <div class="container">
-      <div class="row align-items-center" style="min-height: 60px;">
-        
-        <!-- Colonne gauche : connexion / déconnexion -->
-        <div class="col-12 col-md-4 text-start mb-2 mb-md-0">
-          {% if user.is_authenticated %}
-            <form method="post" action="{% url 'famille:logout' %}" class="d-inline">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-outline-danger btn-sm">Se déconnecter</button>
-            </form>
-          {% else %}
-            <a class="btn btn-outline-primary btn-sm" href="{% url 'famille:login' %}">Se connecter</a>
-          {% endif %}
-        </div>
+<footer class="bg-warning text-center border mt-auto">
+  <div class="container">
+    {% if user.is_authenticated %}
+    <!-- Version CONNECTÉ : 3 colonnes -->
+    <div class="row align-items-center gy-2" style="min-height:60px;">
 
-        <!-- Colonne centrale : liens généraux -->
-        <div class="col-12 col-md-4 d-flex flex-column flex-md-row justify-content-center gap-2 mb-2 mb-md-0">
-          <a class="btn-link btn-primary" href="{% url 'points:bareme' %}" style="font-family: 'Bungee Spice', sans-serif;">Barèmes</a>
-          {% if user.is_authenticated and user.profile.role == "parent" %}
-            <a class="btn-link btn-primary" href="{% url 'famille:manage_account' %}" style="font-family: 'Bungee Spice', sans-serif;">Mon compte</a>
-          {% endif %}
-        </div>
-
-        <!-- Colonne droite : copyright + bouton don -->
-        <div class="col-12 col-md-4 text-end d-flex justify-content-end align-items-center gap-2">
-          <p class="text-dark m-0">© 2025 - Mathieu Cazenave</p>
-          <a href="https://paypal.me/nunespace17"
-             class="btn btn-primary btn-sm"
-             target="_blank" rel="noopener"
-             data-bs-toggle="tooltip"
-             data-bs-placement="top"
-             title="Application gratuite pour les familles – Soutenez le projet"
-             aria-label="Faire un don pour soutenir le projet">
-            Faire un don
+      <!-- Col gauche : liens parent -->
+      <div class="col-12 col-md-4 d-flex flex-column flex-md-row justify-content-center gap-2">
+        {% if user.profile.role == "parent" %}
+          <a class="btn btn-outline-primary btn-sm" href="{% url 'points:bareme' %}">
+            Barèmes
           </a>
-        </div>
+          <a class="btn btn-outline-primary btn-sm" href="{% url 'famille:manage_account' %}">
+            Mon compte
+          </a>
+        {% endif %}
+      </div>
 
+      <!-- Col gauche : Déconnexion -->
+      <div class="col-12 col-md-4 text-start">
+        <form method="post" action="{% url 'famille:logout' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger btn-sm">Se déconnecter</button>
+        </form>
+      </div>
+
+      <!-- Col droite : copyright + don -->
+      <div class="col-12 col-md-4 d-flex justify-content-end align-items-center gap-2">
+        <p class="text-dark m-0">© 2025 - Mathieu Cazenave</p>
+        <a href="https://paypal.me/nunespace17"
+           class="btn btn-primary btn-sm"
+           target="_blank" rel="noopener"
+           data-bs-toggle="tooltip"
+           data-bs-placement="top"
+           title="Application gratuite pour les familles – Soutenez le projet"
+           aria-label="Faire un don pour soutenir le projet">
+          Faire un don
+        </a>
+      </div>
+      
+    </div>
+
+    {% else %}
+    <!-- Version NON CONNECTÉ : 2 colonnes (remplit l'espace) -->
+    <div class="row align-items-center gy-2" style="min-height:60px;">
+      <!-- Col gauche : (on n'affiche pas la colonne vide) -->
+      <!-- Col centre (devient 6 / 12) : rien de spécial à afficher ici, on peut laisser vide ou mettre un texte -->
+      <div class="col-12 col-md-6 d-flex justify-content-center">
+        <!-- Laisser vide, ou afficher un message / lien d'aide si tu veux -->
+      </div>
+
+      <!-- Col droite : copyright + don -->
+      <div class="col-12 col-md-6 d-flex justify-content-end align-items-center gap-2">
+        <p class="text-dark m-0">© 2025 - Mathieu Cazenave</p>
+        <a href="https://paypal.me/nunespace17"
+           class="btn btn-primary btn-sm"
+           target="_blank" rel="noopener"
+           data-bs-toggle="tooltip"
+           data-bs-placement="top"
+           title="Application gratuite pour les familles – Soutenez le projet"
+           aria-label="Faire un don pour soutenir le projet">
+          Faire un don
+        </a>
       </div>
     </div>
-  </footer>
+    {% endif %}
+  </div>
+</footer>
+
 
   <!-- Scripts Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>

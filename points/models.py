@@ -13,12 +13,14 @@ class BaremeRecompense(models.Model):
     def __str__(self):
         return f"{self.points} points"
 
+
 class BaremePointPositif(models.Model):
     motif = models.CharField(max_length=1000)
     points = models.IntegerField(default=1)  # toujours positif
 
     def __str__(self):
         return self.motif
+
 
 class BaremePointNegatif(models.Model):
     motif = models.CharField(max_length=1000)
@@ -28,23 +30,25 @@ class BaremePointNegatif(models.Model):
         return self.motif
 
 
-class Point_positif(models.Model):
-    motif1 = models.CharField(max_length=1000, null=True, blank=True, verbose_name="Motif")
+class PointPositif(models.Model):
+    motif1 = models.CharField(
+        max_length=1000, null=True, blank=True, verbose_name="Motif"
+    )
     nb_positif = models.IntegerField(default=0, verbose_name="Nombre")
-    date = models.DateField(auto_now=True)
+    date = models.DateField(default=timezone.now)
     enfant = models.ForeignKey(Enfant, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.enfant} {self.nb_positif} {self.date}'
+        return f"{self.enfant} {self.nb_positif} {self.date}"
 
 
-class Point_negatif(models.Model):
-    motif2 = models.CharField(max_length=1000, null=True, blank=True, verbose_name="Motif")
+class PointNegatif(models.Model):
+    motif2 = models.CharField(
+        max_length=1000, null=True, blank=True, verbose_name="Motif"
+    )
     nb_negatif = models.IntegerField(default=0, verbose_name="Nombre")
-    date = models.DateField(auto_now=True)
+    date = models.DateField(default=timezone.now)
     enfant = models.ForeignKey(Enfant, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.enfant} {self.nb_negatif} {self.date}'
-
-
+        return f"{self.enfant} {self.nb_negatif} {self.date}"
