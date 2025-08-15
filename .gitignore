@@ -1,5 +1,6 @@
 
 # ⚙️ Fichiers système temporaires
+tmp/
 .tmp.driveupload/
 .tmp.drivedownload/
 *.log

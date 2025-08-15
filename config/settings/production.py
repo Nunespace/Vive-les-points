@@ -14,7 +14,7 @@ DATABASES["default"]["OPTIONS"] = {
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=0)
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-DEBUG = env.bool("DJANGO_DEBUG", False)
+DEBUG = True
 
 ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [f"https://{h.strip()}" for h in ALLOWED_HOSTS if h.strip()]
