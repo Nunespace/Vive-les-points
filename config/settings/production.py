@@ -24,11 +24,13 @@ CSRF_TRUSTED_ORIGINS = [f"https://{h.strip()}" for h in ALLOWED_HOSTS if h.strip
 # Le chemin absolu vers le répertoire dans lequel collectstatic rassemble les fichiers statiques en
 # vue du déploiement.
 # https://docs.djangoproject.com/fr/5.1/ref/settings/#static-root
-STATIC_ROOT = Path(
-    env("DJANGO_STATIC_ROOT", default=str(BASE_DIR / "staticfiles"))
-)
-MEDIA_ROOT = env.path("DJANGO_MEDIA_ROOT",  default=BASE_DIR / "media")
+
+STATIC_URL = "/static/"
+STATIC_ROOT = env.path("DJANGO_STATIC_ROOT", default=BASE_DIR / "staticfiles")
+STATICFILES_DIRS = []  # pour ne pas hériter de base.py en prod
+
 MEDIA_URL = "/media/"
+MEDIA_ROOT = env.path("DJANGO_MEDIA_ROOT", default=BASE_DIR / "media")
 
 # Proxy/HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
