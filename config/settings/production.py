@@ -4,6 +4,7 @@ import os
 import pymysql
 from .base import env
 from . import BASE_DIR
+from pathlib import Path
 
 # DB (o2switch + PyMySQL)
 pymysql.install_as_MySQLdb()
@@ -26,7 +27,7 @@ CSRF_TRUSTED_ORIGINS = [f"https://{h.strip()}" for h in ALLOWED_HOSTS if h.strip
 STATIC_ROOT = Path(
     env("DJANGO_STATIC_ROOT", default=str(BASE_DIR / "staticfiles"))
 )
-MEDIA_ROOT  = env.path("DJANGO_MEDIA_ROOT",  default=BASE_DIR / "media")
+MEDIA_ROOT = env.path("DJANGO_MEDIA_ROOT",  default=BASE_DIR / "media")
 MEDIA_URL = "/media/"
 
 # Proxy/HTTPS

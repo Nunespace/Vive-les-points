@@ -4,6 +4,7 @@ from .base import INSTALLED_APPS
 from .base import MIDDLEWARE
 from .base import env
 from .base import DATABASES
+from . import BASE_DIR
 
 
 DEBUG = True
