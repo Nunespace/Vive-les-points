@@ -3,6 +3,7 @@ from .base import *  # noqa
 import os
 import pymysql
 from .base import env
+from . import BASE_DIR
 
 # DB (o2switch + PyMySQL)
 pymysql.install_as_MySQLdb()
