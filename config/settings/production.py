@@ -11,12 +11,16 @@ DATABASES["default"]["OPTIONS"] = {
     "charset": "utf8mb4",
     "init_command": "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci', sql_mode='STRICT_TRANS_TABLES'",
 }
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=0)
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", False)
 
-ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()]
+ALLOWED_HOSTS = ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["vive-les-points.fr"])
+if not ALLOWED_HOSTS:
+    raise Exception(
+        "DJANGO_ALLOWED_HOSTS n'est pas défini dans l'environnement !"
+    )
 CSRF_TRUSTED_ORIGINS = [f"https://{h.strip()}" for h in ALLOWED_HOSTS if h.strip()]
 
 
@@ -32,14 +36,21 @@ SESSION_COOKIE_NAME = "__Secure-sessionid"
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_NAME = "__Secure-csrftoken"
 
-DEFAULT_HSTS_SECONDS = 60
-SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", DEFAULT_HSTS_SECONDS))
+DEFAULT_HSTS_SECONDS = 518400
+SECURE_HSTS_SECONDS = int(
+    os.environ.get("DJANGO_SECURE_HSTS_SECONDS", DEFAULT_HSTS_SECONDS),
+)  # noqa
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
 SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=True)
 SECURE_CONTENT_TYPE_NOSNIFF = env.bool("DJANGO_SECURE_CONTENT_TYPE_NOSNIFF", default=True)
-
+SECURE_BROWSER_XSS_FILTER = env.bool(
+    "DJANGO_SECURE_BROWSER_XSS_FILTER",
+    default=True,
+)
 # Referrer-Policy (nécessite le middleware django_referrer_policy)
-REFERRER_POLICY = env("DJANGO_SECURE_REFERRER_POLICY", default="strict-origin-when-cross-origin")
+REFERRER_POLICY = os.environ.get(  # noqa
+    "DJANGO_SECURE_REFERRER_POLICY", "no-referrer-when-downgrade"
+).strip()
 
 # Emails
 EMAIL_CONFIG = env.email("DJANGO_EMAIL_URL", default="consolemail://")
