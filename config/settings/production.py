@@ -17,7 +17,10 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", False)
 
-ALLOWED_HOSTS = ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["vive-les-points.fr"])
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS",
+    default=["vive-les-points.fr", "www.vive-les-points.fr"],
+)
 if not ALLOWED_HOSTS:
     raise Exception(
         "DJANGO_ALLOWED_HOSTS n'est pas défini dans l'environnement !"
