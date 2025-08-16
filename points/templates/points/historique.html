@@ -10,11 +10,16 @@
     Tu as {{ enfant.solde_points }} points.
   </p>
 
-  <form method="post">
-    {% csrf_token %}
+  {% if not is_parent %}
+    <div class="alert alert-info text-center py-2 mb-3">
+      Lecture seule 👀 — seuls tes parents peuvent modifier l'historique.
+    </div>
+  {% endif %}
+
+  {% if is_parent %}<form method="post">{% csrf_token %}{% endif %}
 
     {# --- POINTS POSITIFS --- #}
-    {{ pos_fs.management_form }}
+    {% if is_parent %}{{ pos_fs.management_form }}{% endif %}
     <div class="table-responsive mb-4">
       <table class="table table-light table-striped table-hover align-middle mb-0">
         <caption class="caption-top text-center" style="font-family:'Bungee Spice',sans-serif; background-color: cornsilk;">
@@ -25,21 +30,41 @@
             <th>Date</th>
             <th>Nombre</th>
             <th>Motif</th>
-            <th class="text-center">Suppr.</th>
+            {% if is_parent %}<th class="text-center">Suppr.</th>{% endif %}
           </tr>
         </thead>
         <tbody>
           {% for form in pos_fs %}
-            {{ form.id }}  {# Champ caché obligatoire #}
+            {% if is_parent %}{{ form.id }}{% endif %}
             <tr>
-              <td>{{ form.date }}</td>
-              <td>{{ form.nb_positif }}</td>
-              <td>{{ form.motif1 }}</td>
-              <td class="text-center">{{ form.DELETE }}</td>
+              <td>
+                {% if is_parent %}
+                  {{ form.date }}
+                {% else %}
+                  {{ form.instance.date|date:"d/m/Y" }}
+                {% endif %}
+              </td>
+              <td>
+                {% if is_parent %}
+                  {{ form.nb_positif }}
+                {% else %}
+                  {{ form.instance.nb_positif }}
+                {% endif %}
+              </td>
+              <td>
+                {% if is_parent %}
+                  {{ form.motif1 }}
+                {% else %}
+                  {{ form.instance.motif1|default_if_none:"—" }}
+                {% endif %}
+              </td>
+              {% if is_parent %}
+                <td class="text-center">{{ form.DELETE }}</td>
+              {% endif %}
             </tr>
           {% empty %}
             <tr>
-              <td colspan="4" class="text-center text-muted">Aucun point positif</td>
+              <td colspan="{% if is_parent %}4{% else %}3{% endif %}" class="text-center text-muted">Aucun point positif</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -47,7 +72,7 @@
     </div>
 
     {# --- POINTS NÉGATIFS --- #}
-    {{ neg_fs.management_form }}
+    {% if is_parent %}{{ neg_fs.management_form }}{% endif %}
     <div class="table-responsive mb-4">
       <table class="table table-light table-striped table-hover align-middle mb-0">
         <caption class="caption-top text-center" style="font-family:'Bungee Spice',sans-serif; background-color: cornsilk;">
@@ -58,32 +83,55 @@
             <th>Date</th>
             <th>Nombre</th>
             <th>Motif</th>
-            <th class="text-center">Suppr.</th>
+            {% if is_parent %}<th class="text-center">Suppr.</th>{% endif %}
           </tr>
         </thead>
         <tbody>
           {% for form in neg_fs %}
-            {{ form.id }}  {# Champ caché obligatoire #}
+            {% if is_parent %}{{ form.id }}{% endif %}
             <tr>
-              <td>{{ form.date }}</td>
-              <td>{{ form.nb_negatif }}</td>
-              <td>{{ form.motif2 }}</td>
-              <td class="text-center">{{ form.DELETE }}</td>
+              <td>
+                {% if is_parent %}
+                  {{ form.date }}
+                {% else %}
+                  {{ form.instance.date|date:"d/m/Y" }}
+                {% endif %}
+              </td>
+              <td>
+                {% if is_parent %}
+                  {{ form.nb_negatif }}
+                {% else %}
+                  {{ form.instance.nb_negatif }}
+                {% endif %}
+              </td>
+              <td>
+                {% if is_parent %}
+                  {{ form.motif2 }}
+                {% else %}
+                  {{ form.instance.motif2|default_if_none:"—" }}
+                {% endif %}
+              </td>
+              {% if is_parent %}
+                <td class="text-center">{{ form.DELETE }}</td>
+              {% endif %}
             </tr>
           {% empty %}
             <tr>
-              <td colspan="4" class="text-center text-muted">Aucun point négatif</td>
+              <td colspan="{% if is_parent %}4{% else %}3{% endif %}" class="text-center text-muted">Aucun point négatif</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
 
-    <div class="d-flex justify-content-center gap-2">
-      <a href="{% url 'points:dashboard' %}" class="btn btn-outline-secondary btn-sm">Annuler</a>
-      <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
-    </div>
-  </form>
+    {% if is_parent %}
+      <div class="d-flex justify-content-center gap-2">
+        <a href="{% url 'points:dashboard' %}" class="btn btn-outline-secondary btn-sm">Annuler</a>
+        <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+      </div>
+    {% endif %}
+
+  {% if is_parent %}</form>{% endif %}
 
 </div>
 {% endblock content %}

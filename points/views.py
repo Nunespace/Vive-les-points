@@ -8,9 +8,8 @@ from django.contrib.auth.mixins import (
     PermissionRequiredMixin,
 )
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.decorators import permission_required
+# from django.contrib.auth.decorators import permission_required as permission_required_decorator
 from django.db.models import Sum
-
 from .models import (
     BaremeRecompense,
     BaremePointPositif,
@@ -20,7 +19,6 @@ from .models import (
 )
 from famille.models import Enfant
 from famille.mixins import EnfantFamilleMixin, get_user_famille
-
 from .forms import (
     PointsPositifsCreationForm,
     PointsNegatifsCreationForm,
@@ -127,7 +125,7 @@ def update_cell(request, model_name, pk, field):
     return render(request, "points/cell_form.html", ctx)
 
 
-class IndexView(
+class DashboardView(
     LoginRequiredMixin, PermissionRequiredMixin, EnfantFamilleMixin, ListView
 ):
     """
@@ -236,55 +234,48 @@ new_points_view = NewPointsView.as_view()
 
 
 @login_required
-@permission_required(
-    ["points.change_pointpositif", "points.change_pointnegatif"],
-    raise_exception=True,
-)
 def historique_editable(request, pk):
-    enfant = get_object_or_404(
-        Enfant, pk=pk, famille=request.user.profile.famille
-    )
+    """
+    Vue pour éditer l'historique des points d'un enfant.
+    @permission_required n'est pas utilisé sinon les enfants seraient bloqués dès l’accès. La sécurité est assurée par :
+    -le filtrage famille=request.user.profile.famille
+    -le POST interdit si not is_parent.
+    """
+    enfant = get_object_or_404(Enfant, pk=pk, famille=request.user.profile.famille)
 
-    qs_pos = PointPositif.objects.filter(enfant=enfant).order_by(
-        "-date", "-id"
-    )
-    qs_neg = PointNegatif.objects.filter(enfant=enfant).order_by(
-        "-date", "-id"
+    qs_pos = PointPositif.objects.filter(enfant=enfant).order_by("-date", "-id")
+    qs_neg = PointNegatif.objects.filter(enfant=enfant).order_by("-date", "-id")
+
+    # Parent = a les deux permissions de modification
+    is_parent = (
+        request.user.has_perm("points.change_pointpositif")
+        and request.user.has_perm("points.change_pointnegatif")
     )
 
     if request.method == "POST":
-        pos_fs = PointPositifFormSet(
-            request.POST, prefix="pp", queryset=qs_pos
-        )
-        neg_fs = PointNegatifFormSet(
-            request.POST, prefix="pn", queryset=qs_neg
-        )
+        if not is_parent:
+            return HttpResponseForbidden("Accès réservé aux parents.")
+        pos_fs = PointPositifFormSet(request.POST, prefix="pp", queryset=qs_pos)
+        neg_fs = PointNegatifFormSet(request.POST, prefix="pn", queryset=qs_neg)
         if pos_fs.is_valid() and neg_fs.is_valid():
             pos_fs.save()
             neg_fs.save()
 
             # Recalcul du solde
             total_pos = (
-                PointPositif.objects.filter(enfant=enfant).aggregate(
-                    total=Sum("nb_positif")
-                )["total"]
-                or 0
+                PointPositif.objects.filter(enfant=enfant).aggregate(total=Sum("nb_positif"))["total"] or 0
             )
             total_neg = (
-                PointNegatif.objects.filter(enfant=enfant).aggregate(
-                    total=Sum("nb_negatif")
-                )["total"]
-                or 0
+                PointNegatif.objects.filter(enfant=enfant).aggregate(total=Sum("nb_negatif"))["total"] or 0
             )
             enfant.solde_points = total_pos - total_neg
             enfant.save(update_fields=["solde_points"])
-            # Message de succès
+
             messages.success(request, "Modifications enregistrées ✅")
             return redirect("points:historique", pk=enfant.id)
-
         else:
-            print("errors :", pos_fs.errors)
-            print("errors :", neg_fs.errors)
+            print("errors POS:", pos_fs.errors)
+            print("errors NEG:", neg_fs.errors)
     else:
         pos_fs = PointPositifFormSet(prefix="pp", queryset=qs_pos)
         neg_fs = PointNegatifFormSet(prefix="pn", queryset=qs_neg)
@@ -296,5 +287,6 @@ def historique_editable(request, pk):
             "enfant": enfant,
             "pos_fs": pos_fs,
             "neg_fs": neg_fs,
+            "is_parent": is_parent,
         },
     )

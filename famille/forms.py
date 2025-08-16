@@ -143,11 +143,47 @@ class EnfantSignupForm(forms.Form):
         return data
 
 
+# famille/forms.py
+from django.forms import BaseFormSet, formset_factory
+from django.core.exceptions import ValidationError
+
+# ...
+
+class BaseParentFormSet(BaseFormSet):
+    def clean(self):
+        super().clean()
+        count = 0
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data"):
+                continue
+            if form.cleaned_data.get("DELETE"):
+                continue
+            # Compter seulement les formulaires réellement remplis
+            if form.has_changed():
+                count += 1
+        if count == 0:
+            raise ValidationError("Ajoutez au moins un parent.")
+
+
+class BaseEnfantFormSet(BaseFormSet):
+    def clean(self):
+        super().clean()
+        count = 0
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data"):
+                continue
+            if form.cleaned_data.get("DELETE"):
+                continue
+            if form.has_changed():
+                count += 1
+        if count == 0:
+            raise ValidationError("Ajoutez au moins un enfant.")
+
+
 # Formsets utilisés sur la page d'inscription
-ParentFormSet = formset_factory(ParentUserForm, extra=1, can_delete=True)
-EnfantSignupFormSet = formset_factory(
-    EnfantSignupForm, extra=1, can_delete=True
-)
+ParentFormSet = formset_factory(ParentUserForm, extra=1, can_delete=True, formset=BaseParentFormSet)
+EnfantSignupFormSet = formset_factory(EnfantSignupForm, extra=1, can_delete=True, formset=BaseEnfantFormSet)
+
 
 
 # ==============================================================

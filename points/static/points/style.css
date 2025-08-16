@@ -1,13 +1,20 @@
+
 html, body {
-    height: 100%;
-    margin: 0;
+  height: 100%;
+  margin: 0;
 }
-
 body {
-    position: relative;
-    min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
+main {
+  flex: 1; /* prend toute la hauteur restante */
+}
+/* Espace de sécurité en bas si footer fixed */
+:root { --footer-h: 72px; }
 
+/* Fond d'écran */
 body::before {
     content: "";
     position: fixed;
@@ -24,12 +31,7 @@ body::before {
 }
 
 
-:root { --footer-h: 72px; }      /* ≈ hauteur du footer */
-main { padding-bottom: calc(var(--footer-h) + 1rem); } /* évite le chevauchement */
-
-
-
-
+/* Couleur de fond du body */
 /* Titre de page */
 .page-title {
   font-weight: 800;
@@ -53,12 +55,58 @@ main { padding-bottom: calc(var(--footer-h) + 1rem); } /* évite le chevauchemen
 }
 
 /* Stack des messages, espace pour ne pas se coller au header */
-.alerts-stack { padding-top: .5rem; }
+/* Fond rouge clair derrière la pile d’alertes */
+
+/* Par défaut : aucun cadre */
+.alerts-stack{
+  padding-top: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* Fond seulement pour erreurs/avertissements */
+.alerts-stack:has(.alert-danger),
+.alerts-stack:has(.alert-warning){
+  padding-top: .5rem;
+  background-color: orange;
+  border-bottom: 1px solid rgba(220,53,69,.25);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  border-radius: .25rem;
+}
+
+/* Succès / info : pas de fond (ou très léger si tu veux) */
+.alerts-stack:has(.alert-success),
+.alerts-stack:has(.alert-info),
+.alerts-stack:has(.alert-primary),
+.alerts-stack:has(.alert-secondary){
+  padding-top: .5rem;               /* garder l’espacement si tu aimes */
+  background-color: rgba(25,135,84,.08); /* vert Bootstrap */         /* pas de bande orange */
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+
 
 /* Meilleure lisibilité des erreurs longues */
 .alert ul { margin-bottom: 0; }
 .alert { font-size: 1rem; }
 
-/* Espace de sécurité en bas si footer fixed */
-:root { --footer-h: 72px; }
-main { padding-bottom: calc(var(--footer-h) + 1rem); }
+/* erreurs sous les champs */
+.errorlist {
+  color: #dc3545;       /* rouge Bootstrap */
+  margin: .25rem 0 0;   /* petit espace au-dessus */
+  list-style: none;     /* on enlève les puces */
+  padding-left: 0;
+  font-size: .875rem;   /* un peu plus petit que le texte normal */
+}
+
+/* si tu veux que ce soit bien cohérent avec Bootstrap */
+.errorlist li::before {
+  content: "⚠ ";        /* ou rien si tu veux juste du texte */
+}
+
+
+

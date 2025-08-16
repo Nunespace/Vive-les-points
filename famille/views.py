@@ -102,19 +102,21 @@ class RegisterFamilyView(View):
         parent_formset = ParentFormSet(request.POST, prefix="parents")
         enfant_formset = EnfantSignupFormSet(request.POST, prefix="enfants")
 
-        if not (
-            famille_form.is_valid()
-            and parent_formset.is_valid()
-            and enfant_formset.is_valid()
-        ):
-            # Affichage d’un message d’erreurs agrégé
+        if not (famille_form.is_valid() and parent_formset.is_valid() and enfant_formset.is_valid()):
+            # --- agrégateur d’erreurs (ajoute les non_form_errors) ---
             from django.utils.html import format_html, format_html_join
-
             error_messages = []
 
+            # erreurs du form Famille
             for field, errors in famille_form.errors.items():
                 for err in errors:
                     error_messages.append(f"Famille – {field} : {err}")
+
+            # erreurs des formsets Parents / Enfants
+            for err in parent_formset.non_form_errors():
+                error_messages.append(f"Parents – {err}")
+            for err in enfant_formset.non_form_errors():
+                error_messages.append(f"Enfants – {err}")
 
             for i, form in enumerate(parent_formset.forms, start=1):
                 for field, errors in form.errors.items():
@@ -131,60 +133,56 @@ class RegisterFamilyView(View):
                     request,
                     format_html(
                         'Certains champs sont invalides :<ul class="mb-0">{}</ul>',
-                        format_html_join(
-                            "", "<li>{}</li>", ((e,) for e in error_messages)
-                        ),
+                        format_html_join("", "<li>{}</li>", ((e,) for e in error_messages)),
                     ),
                 )
+
             return render(
-                request,
-                self.template_name,
-                {
-                    "famille_form": famille_form,
-                    "parent_formset": parent_formset,
-                    "enfant_formset": enfant_formset,
-                },
+                request, self.template_name,
+                {"famille_form": famille_form, "parent_formset": parent_formset, "enfant_formset": enfant_formset}
             )
+
+        # --- Ne garder que les formulaires remplis & non supprimés (création) ---
+        parents_valids = [
+            f for f in parent_formset.forms
+            if f.has_changed() and not f.cleaned_data.get("DELETE", False)
+        ]
+        enfants_valids = [
+            f for f in enfant_formset.forms
+            if f.has_changed() and not f.cleaned_data.get("DELETE", False)
+        ]
 
         # 1) Famille
         famille = famille_form.save()
 
-        # 2) Parents
+        # 2) Groupes
         parents_group = _get_group("parents")
         enfants_group = _get_group("enfant")
 
+        # 3) Parents
         first_parent = None
-        for form in parent_formset:
-            if form.cleaned_data.get("DELETE"):
-                continue
+        for form in parents_valids:
             cd = form.cleaned_data
             user = User.objects.create_user(
-                username=cd["email"],  # email comme identifiant
+                username=cd["email"],
                 email=cd["email"],
                 password=cd["password1"],
                 first_name=cd["first_name"],
                 last_name=cd["last_name"],
             )
             user.groups.add(parents_group)
-            UserProfile.objects.create(
-                user=user, famille=famille, role="parent"
-            )
+            UserProfile.objects.create(user=user, famille=famille, role="parent")
             if first_parent is None:
                 first_parent = user
 
-        # 3) Enfants (modèle) + (facultatif) compte User enfant lié (OneToOne)
-        for form in enfant_formset:
-            if form.cleaned_data.get("DELETE"):
-                continue
+        # 4) Enfants (+ compte user enfant optionnel)
+        for form in enfants_valids:
             cd = form.cleaned_data
-
             enfant_obj = Enfant.objects.create(
                 prenom=cd["prenom"],
                 solde_points=cd.get("solde_points") or 0,
                 famille=famille,
             )
-
-            # créer un compte enfant si email fourni
             if cd.get("email"):
                 u = User.objects.create_user(
                     username=cd["email"],
@@ -194,30 +192,23 @@ class RegisterFamilyView(View):
                     last_name=famille.nom,
                 )
                 u.groups.add(enfants_group)
-                UserProfile.objects.create(
-                    user=u, famille=famille, role="enfant"
-                )
-
-                # Lier OneToOne
+                UserProfile.objects.create(user=u, famille=famille, role="enfant")
                 enfant_obj.user = u
                 enfant_obj.save(update_fields=["user"])
 
         messages.success(request, "Famille et utilisateurs créés avec succès.")
 
-        # 4) Connexion du 1er parent
+        # 5) Connexion du 1er parent
         if first_parent:
-            # Pose explicitement le backend si nécessaire
-            backend = getattr(
-                settings,
-                "AUTHENTICATION_BACKENDS",
-                ["django.contrib.auth.backends.ModelBackend"],
-            )[0]
+            backend = getattr(settings, "AUTHENTICATION_BACKENDS",
+                            ["django.contrib.auth.backends.ModelBackend"])[0]
             login(request, first_parent, backend=backend)
 
         return redirect("points:dashboard")
 
 
 register_family_view = RegisterFamilyView.as_view()
+
 
 
 # ===================================================================
