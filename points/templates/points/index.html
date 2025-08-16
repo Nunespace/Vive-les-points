@@ -21,7 +21,7 @@
             </a>
             <p class="mb-3">points.</p>
 
-            {% if perms.points.add_point_positif %}
+            {% if perms.points.add_pointpositif %}
               <a class="btn btn-outline-primary btn-lg mt-3"
                  href="{% url 'points:new_points' enfant.id %}"
                  role="button">
