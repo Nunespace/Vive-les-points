@@ -155,8 +155,8 @@ class NewPointsView(LoginRequiredMixin, PermissionRequiredMixin, View):
     success_url = "points:dashboard"
     permission_required = (
         "famille.view_enfant",
-        "points.add_point_positif",
-        "points.add_point_negatif",
+        "points.add_pointpositif",
+        "points.add_pointnegatif",
     )
 
     def _get_enfant_owned(self, request, pk):
@@ -237,7 +237,7 @@ new_points_view = NewPointsView.as_view()
 
 @login_required
 @permission_required(
-    ["points.change_point_positif", "points.change_point_negatif"],
+    ["points.change_pointpositif", "points.change_pointnegatif"],
     raise_exception=True,
 )
 def historique_editable(request, pk):

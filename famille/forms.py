@@ -15,12 +15,22 @@ User = get_user_model()
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
         label="Adresse email",
-        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "Votre adresse email"})
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Votre adresse email",
+            }
+        ),
     )
     password = forms.CharField(
         label="Mot de passe",
         strip=False,
-        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Votre mot de passe"})
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Votre mot de passe",
+            }
+        ),
     )
 
 
@@ -36,22 +46,43 @@ class FamilleForm(forms.ModelForm):
 # ================   INSCRIPTION (création)   ==================
 # ==============================================================
 
+
 class ParentUserForm(forms.Form):
     """
     Formulaires parents pour la page d'inscription.
     On crée des Users (parents) + UserProfile(role=parent).
     """
-    first_name = forms.CharField(label="Prénom", max_length=150, widget=forms.TextInput(attrs={"class": "form-control"}))
-    last_name  = forms.CharField(label="Nom",    max_length=150, widget=forms.TextInput(attrs={"class": "form-control"}))
-    email      = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={"class": "form-control"}))
-    password1  = forms.CharField(label="Mot de passe", widget=forms.PasswordInput(attrs={"class": "form-control"}))
-    password2  = forms.CharField(label="Confirmer le mot de passe", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+
+    first_name = forms.CharField(
+        label="Prénom",
+        max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    last_name = forms.CharField(
+        label="Nom",
+        max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    email = forms.EmailField(
+        label="Email", widget=forms.EmailInput(attrs={"class": "form-control"})
+    )
+    password1 = forms.CharField(
+        label="Mot de passe",
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
+    password2 = forms.CharField(
+        label="Confirmer le mot de passe",
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
 
     def clean(self):
         data = super().clean()
         if data.get("password1") != data.get("password2"):
             raise ValidationError("Les mots de passe ne correspondent pas.")
-        if data.get("email") and User.objects.filter(email__iexact=data["email"]).exists():
+        if (
+            data.get("email")
+            and User.objects.filter(email__iexact=data["email"]).exists()
+        ):
             raise ValidationError("Un compte existe déjà avec cet email.")
         return data
 
@@ -61,10 +92,27 @@ class EnfantSignupForm(forms.Form):
     Formulaires enfants pour la page d'inscription.
     On crée des Enfant (modèle) et, si email saisi, un User enfant lié (OneToOne).
     """
-    prenom = forms.CharField(label="Prénom", max_length=200, widget=forms.TextInput(attrs={"class": "form-control"}))
-    solde_points = forms.IntegerField(label="Solde initial", initial=0, widget=forms.NumberInput(attrs={"class": "form-control"}))
-    email = forms.EmailField(label="Email (facultatif)", required=False, widget=forms.EmailInput(attrs={"class": "form-control"}))
-    password = forms.CharField(label="Mot de passe (si email saisi)", required=False, widget=forms.PasswordInput(attrs={"class": "form-control"}))
+
+    prenom = forms.CharField(
+        label="Prénom",
+        max_length=200,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    solde_points = forms.IntegerField(
+        label="Solde initial",
+        initial=0,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+    email = forms.EmailField(
+        label="Email (facultatif)",
+        required=False,
+        widget=forms.EmailInput(attrs={"class": "form-control"}),
+    )
+    password = forms.CharField(
+        label="Mot de passe (si email saisi)",
+        required=False,
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
 
     def clean(self):
         data = super().clean()
@@ -78,42 +126,66 @@ class EnfantSignupForm(forms.Form):
                 existing_user = None
 
             # 2) Si un User existe déjà sur cet email, vérifier qu'il n'est pas déjà lié à un Enfant
-            if existing_user and Enfant.objects.filter(user=existing_user).exists():
-                raise ValidationError("Cet email est déjà utilisé par un autre enfant.")
+            if (
+                existing_user
+                and Enfant.objects.filter(user=existing_user).exists()
+            ):
+                raise ValidationError(
+                    "Cet email est déjà utilisé par un autre enfant."
+                )
 
             # 3) Mot de passe requis si email saisi
             if not password:
-                raise ValidationError("Mot de passe requis si un email enfant est saisi.")
+                raise ValidationError(
+                    "Mot de passe requis si un email enfant est saisi."
+                )
 
         return data
 
 
 # Formsets utilisés sur la page d'inscription
 ParentFormSet = formset_factory(ParentUserForm, extra=1, can_delete=True)
-EnfantSignupFormSet = formset_factory(EnfantSignupForm, extra=1, can_delete=True)
+EnfantSignupFormSet = formset_factory(
+    EnfantSignupForm, extra=1, can_delete=True
+)
 
 
 # ==============================================================
 # ==============   GESTION COMPTE (édition)   ==================
 # ==============================================================
 
+
 class ParentInlineForm(forms.Form):
     """
     Edition des parents (Users existants ou ajout).
     """
+
     user_id = forms.IntegerField(required=False, widget=HiddenInput)
-    first_name = forms.CharField(label="Prénom", max_length=150, widget=forms.TextInput(attrs={"class": "form-control"}))
-    last_name  = forms.CharField(label="Nom",    max_length=150, widget=forms.TextInput(attrs={"class": "form-control"}))
-    email      = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={"class": "form-control"}))
+    first_name = forms.CharField(
+        label="Prénom",
+        max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    last_name = forms.CharField(
+        label="Nom",
+        max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    email = forms.EmailField(
+        label="Email", widget=forms.EmailInput(attrs={"class": "form-control"})
+    )
     new_password = forms.CharField(
-        label="Nouveau mot de passe (optionnel)", required=False,
-        widget=forms.PasswordInput(attrs={"class": "form-control"})
+        label="Nouveau mot de passe (optionnel)",
+        required=False,
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
     )
     DELETE = forms.BooleanField(required=False)
 
     def __init__(self, *args, famille=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.famille = famille  # si tu veux ajouter des validations liées à la famille
+        self.famille = (
+            famille  # si tu veux ajouter des validations liées à la famille
+        )
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
@@ -126,21 +198,26 @@ class ParentInlineForm(forms.Form):
         return email
 
 
-ParentInlineFormSet = formset_factory(ParentInlineForm, extra=0, can_delete=True)
+ParentInlineFormSet = formset_factory(
+    ParentInlineForm, extra=0, can_delete=True
+)
 
 
 class EnfantManageForm(forms.ModelForm):
     """
     Edition d'un Enfant (modèle) + gestion du compte User enfant lié (OneToOne).
     """
+
     # Champs HORS-modèle, pour gérer le compte enfant lié
     email = forms.EmailField(
-        label="Email (facultatif)", required=False,
-        widget=forms.EmailInput(attrs={"class": "form-control"})
+        label="Email (facultatif)",
+        required=False,
+        widget=forms.EmailInput(attrs={"class": "form-control"}),
     )
     new_password = forms.CharField(
-        label="Mot de passe (si email saisi)", required=False,
-        widget=forms.PasswordInput(attrs={"class": "form-control"})
+        label="Mot de passe (si email saisi)",
+        required=False,
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
     )
 
     class Meta:
@@ -168,10 +245,14 @@ class EnfantManageForm(forms.ModelForm):
             if self.instance and self.instance.user:
                 qs = qs.exclude(pk=self.instance.user.pk)
             if qs.exists():
-                raise ValidationError("Un compte utilisateur existe déjà avec cet email.")
+                raise ValidationError(
+                    "Un compte utilisateur existe déjà avec cet email."
+                )
             # Exiger un mot de passe s'il n'y a pas encore d'user lié
             if not self.instance.user and not pwd:
-                raise ValidationError("Mot de passe requis si un email enfant est saisi.")
+                raise ValidationError(
+                    "Mot de passe requis si un email enfant est saisi."
+                )
         return data
 
     def save_user(self, famille):
@@ -192,7 +273,9 @@ class EnfantManageForm(forms.ModelForm):
 
         # Créer/Màj le User enfant
         if not self.instance.user:
-            user = User.objects.create_user(username=email, email=email, password=pwd)
+            user = User.objects.create_user(
+                username=email, email=email, password=pwd
+            )
             self.instance.user = user
             self.instance.save(update_fields=["user"])
         else:
@@ -205,20 +288,22 @@ class EnfantManageForm(forms.ModelForm):
 
         # Groupe + profil enfant
         from django.contrib.auth.models import Group
+
         group_enfant, _ = Group.objects.get_or_create(name="enfant")
         user.groups.add(group_enfant)
         UserProfile.objects.update_or_create(
-            user=user,
-            defaults={"famille": famille, "role": "enfant"}
+            user=user, defaults={"famille": famille, "role": "enfant"}
         )
 
 
 # Inline formset basé sur Enfant (modèle) + notre form personnalisé
 EnfantInlineFormSet = inlineformset_factory(
-    Famille, Enfant,
+    Famille,
+    Enfant,
     form=EnfantManageForm,
-    extra=0, can_delete=True,
-    labels={"DELETE": "Retirer de la famille"}
+    extra=0,
+    can_delete=True,
+    labels={"DELETE": "Retirer de la famille"},
 )
 
 
@@ -226,9 +311,14 @@ EnfantInlineFormSet = inlineformset_factory(
 class FamilyHardDeleteForm(forms.Form):
     family_name = forms.CharField(
         label="Tapez le nom de la famille pour confirmer",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nom exact de la famille"})
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Nom exact de la famille",
+            }
+        ),
     )
     password = forms.CharField(
         label="Mot de passe",
-        widget=forms.PasswordInput(attrs={"class": "form-control"})
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
     )
