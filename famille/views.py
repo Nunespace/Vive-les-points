@@ -10,8 +10,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 import logging
-log = logging.getLogger(__name__)
-
 from .forms import (
     EmailAuthenticationForm,
     FamilleForm,
@@ -21,20 +19,10 @@ from .forms import (
     EnfantInlineFormSet,   # <-- gestion de compte (form modèle + champs extra)
     FamilyHardDeleteForm,
 )
-from .models import Famille, Enfant, UserProfile
+from .models import Enfant, UserProfile
+
 
 User = get_user_model()
-import logging
-from django.contrib import messages
-from django.contrib.auth import get_user_model, login, update_session_auth_hash
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
-from django.conf import settings
-from django.views import View
-
-from .models import UserProfile
-from .forms import FamilleForm, ParentInlineFormSet, EnfantInlineFormSet
 
 logger = logging.getLogger(__name__)
 

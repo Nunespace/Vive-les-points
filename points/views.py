@@ -25,7 +25,7 @@ from .forms import (
     PointsPositifsCreationForm,
     PointsNegatifsCreationForm,
     PointPositifFormSet,
-    PointNegatifFormSet
+    PointNegatifFormSet,
 )
 
 
@@ -139,8 +139,8 @@ class IndexView(
     context_object_name = "enfants_list"
     model = Enfant  # super().get_queryset() => Enfant.objects.all(), puis filtré par le mixin
     permission_required = (
-        "points.view_point_positif",
-        "points.view_point_negatif",
+        "points.view_pointpositif",
+        "points.view_pointnegatif",
     )
 
 
@@ -236,27 +236,46 @@ new_points_view = NewPointsView.as_view()
 
 
 @login_required
-@permission_required(["points.change_point_positif", "points.change_point_negatif"], raise_exception=True)
+@permission_required(
+    ["points.change_point_positif", "points.change_point_negatif"],
+    raise_exception=True,
+)
 def historique_editable(request, pk):
     enfant = get_object_or_404(
-        Enfant,
-        pk=pk,
-        famille=request.user.profile.famille
+        Enfant, pk=pk, famille=request.user.profile.famille
     )
 
-    qs_pos = PointPositif.objects.filter(enfant=enfant).order_by("-date", "-id")
-    qs_neg = PointNegatif.objects.filter(enfant=enfant).order_by("-date", "-id")
+    qs_pos = PointPositif.objects.filter(enfant=enfant).order_by(
+        "-date", "-id"
+    )
+    qs_neg = PointNegatif.objects.filter(enfant=enfant).order_by(
+        "-date", "-id"
+    )
 
     if request.method == "POST":
-        pos_fs = PointPositifFormSet(request.POST, prefix="pp", queryset=qs_pos)
-        neg_fs = PointNegatifFormSet(request.POST, prefix="pn", queryset=qs_neg)
+        pos_fs = PointPositifFormSet(
+            request.POST, prefix="pp", queryset=qs_pos
+        )
+        neg_fs = PointNegatifFormSet(
+            request.POST, prefix="pn", queryset=qs_neg
+        )
         if pos_fs.is_valid() and neg_fs.is_valid():
             pos_fs.save()
             neg_fs.save()
 
             # Recalcul du solde
-            total_pos = PointPositif.objects.filter(enfant=enfant).aggregate(total=Sum("nb_positif"))["total"] or 0
-            total_neg = PointNegatif.objects.filter(enfant=enfant).aggregate(total=Sum("nb_negatif"))["total"] or 0
+            total_pos = (
+                PointPositif.objects.filter(enfant=enfant).aggregate(
+                    total=Sum("nb_positif")
+                )["total"]
+                or 0
+            )
+            total_neg = (
+                PointNegatif.objects.filter(enfant=enfant).aggregate(
+                    total=Sum("nb_negatif")
+                )["total"]
+                or 0
+            )
             enfant.solde_points = total_pos - total_neg
             enfant.save(update_fields=["solde_points"])
             # Message de succès
@@ -270,8 +289,12 @@ def historique_editable(request, pk):
         pos_fs = PointPositifFormSet(prefix="pp", queryset=qs_pos)
         neg_fs = PointNegatifFormSet(prefix="pn", queryset=qs_neg)
 
-    return render(request, "points/historique.html", {
-        "enfant": enfant,
-        "pos_fs": pos_fs,
-        "neg_fs": neg_fs,
-    })
+    return render(
+        request,
+        "points/historique.html",
+        {
+            "enfant": enfant,
+            "pos_fs": pos_fs,
+            "neg_fs": neg_fs,
+        },
+    )
