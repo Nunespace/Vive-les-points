@@ -8,7 +8,7 @@ from . import env
 
 #pymysql.install_as_MySQLdb()
 
-#SECRET_KEY = "django-insecure-w4=l$gl&jcbn$((dh-x1afur3(!l-%twsa6wcvav_loi959*f%"
+
 
 # DEBUG:
 # De base, on désactive le mode DEBUG pour éviter les oublis en production
@@ -34,8 +34,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -94,8 +94,8 @@ PASSWORD_HASHERS = [
 
 
 AUTHENTICATION_BACKENDS = [
-    "unique_user_email.backend.EmailBackend",
     "django.contrib.auth.backends.ModelBackend",
+    "unique_user_email.backend.EmailBackend",
 ]
 
 UNIQUE_USER_EMAIL = True

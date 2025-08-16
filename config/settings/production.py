@@ -6,6 +6,7 @@ from .base import env
 
 # DB (o2switch + PyMySQL)
 pymysql.install_as_MySQLdb()
+
 DATABASES = {"default": env.db("DJANGO_DATABASE_URL")}
 DATABASES["default"]["OPTIONS"] = {
     "charset": "utf8mb4",
@@ -21,8 +22,7 @@ if not ALLOWED_HOSTS:
     raise Exception(
         "DJANGO_ALLOWED_HOSTS n'est pas défini dans l'environnement !"
     )
-CSRF_TRUSTED_ORIGINS = [f"https://{h.strip()}" for h in ALLOWED_HOSTS if h.strip()]
-
+CSRF_TRUSTED_ORIGINS = ["https://vive-les-points.fr", "https://www.vive-les-points.fr"]
 
 
 
