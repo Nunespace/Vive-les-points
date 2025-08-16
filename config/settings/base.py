@@ -138,9 +138,12 @@ STATIC_URL = "/static/"
 # staticfiles parcourt. Cela permet de servir des fichiers statiques à partir
 # de plusieurs emplacements pour le développement (facultatif)
 # https://docs.djangoproject.com/fr/5.1/ref/settings/#staticfiles-dirs
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+# En dev uniquement si le dossier existe
+STATICFILES_DIRS = []
+_candidate = BASE_DIR / "static"
+if DEBUG and _candidate.exists():
+    STATICFILES_DIRS.append(_candidate)
+
 
 # La configuration STORAGES définit les backends de stockage pour les fichiers
 # par défaut et les fichiers statiques dans une application Django.
