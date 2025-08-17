@@ -42,11 +42,28 @@
               <div class="col-md-6">
                 <label class="form-label">Email</label>{{ form.email }}{{ form.email.errors }}
               </div>
+
+              <!-- Mot de passe avec bouton œil -->
               <div class="col-md-3">
-                <label class="form-label">Mot de passe</label>{{ form.password1 }}{{ form.password1.errors }}
+                <label class="form-label">Mot de passe</label>
+                <div class="input-group">
+                  {{ form.password1 }}
+                  <button class="btn btn-outline-secondary toggle-password" type="button">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                {{ form.password1.errors }}
               </div>
+
               <div class="col-md-3">
-                <label class="form-label">Confirmer</label>{{ form.password2 }}{{ form.password2.errors }}
+                <label class="form-label">Confirmer</label>
+                <div class="input-group">
+                  {{ form.password2 }}
+                  <button class="btn btn-outline-secondary toggle-password" type="button">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                {{ form.password2.errors }}
               </div>
             </div>
           </div>
@@ -74,8 +91,17 @@
               <div class="col-md-4">
                 <label class="form-label">Email (facultatif)</label>{{ form.email }}{{ form.email.errors }}
               </div>
+
+              <!-- Mot de passe enfant -->
               <div class="col-md-4">
-                <label class="form-label">Mot de passe (si email)</label>{{ form.password }}{{ form.password.errors }}
+                <label class="form-label">Mot de passe (si email)</label>
+                <div class="input-group">
+                  {{ form.password }}
+                  <button class="btn btn-outline-secondary toggle-password" type="button">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                {{ form.password.errors }}
               </div>
             </div>
             <div class="form-check mt-2">
@@ -93,6 +119,8 @@
 </div>
 
 <script>
+  
+
   // Duplication simple de formulaires côté client pour formsets
   function addForm(prefix, containerId) {
     const container = document.getElementById(containerId);
@@ -105,7 +133,6 @@
     newForm.querySelectorAll('input').forEach(inp => {
       if (inp.type === 'checkbox') { inp.checked = false; return; }
       inp.value = '';
-      // Re-index des noms
       inp.name = inp.name.replace(`${prefix}-0-`, `${prefix}-${total}-`);
       inp.id = inp.id.replace(`${prefix}-0-`, `${prefix}-${total}-`);
     });
@@ -117,4 +144,67 @@
   document.getElementById('add-parent').addEventListener('click', () => addForm('parents', 'parents-container'));
   document.getElementById('add-enfant').addEventListener('click', () => addForm('enfants', 'enfants-container'));
 </script>
+<script>
+  // --- Auto-remplir le nom de famille -> nom des parents ---
+  const familyInput = document.querySelector('input[name="nom"]'); // champ "Nom de la famille"
+  const parentsContainer = document.getElementById('parents-container');
+
+  function markAutofilled(input, val) {
+    input.value = val;
+    input.dataset.autofilled = '1'; // on marque comme auto-rempli
+  }
+
+  function updateParentsLastNames(fromVal) {
+    const val = (fromVal || '').trim();
+    parentsContainer.querySelectorAll('input[name$="-last_name"]').forEach(inp => {
+      // On ne remplace que si vide OU déjà auto-rempli
+      if (!inp.value || inp.dataset.autofilled === '1') {
+        markAutofilled(inp, val);
+      }
+    });
+  }
+
+  if (familyInput) {
+    // Quand on tape le nom de la famille, on répercute
+    familyInput.addEventListener('input', (e) => updateParentsLastNames(e.target.value));
+  }
+
+  // Si l'utilisateur tape lui-même le nom du parent, on désactive l’auto-remplissage pour ce champ
+  parentsContainer.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.matches('input[name$="-last_name"]')) {
+      t.dataset.autofilled = '0';
+    }
+  });
+
+  // --- Intégration avec ton bouton "Ajouter un parent" ---
+  function afterAddParent(newForm) {
+    const lastNameInput = newForm.querySelector('input[name$="-last_name"]');
+    if (lastNameInput) {
+      const famVal = familyInput ? familyInput.value.trim() : '';
+      // Auto-remplir au moment de l’ajout (sans forcer si l’utilisateur modifie après)
+      markAutofilled(lastNameInput, famVal);
+    }
+  }
+
+  // On monkey-patche ta fonction addForm pour appeler afterAddParent quand on ajoute un parent
+  const _origAddForm = addForm;
+  window.addForm = function(prefix, containerId) {
+    const newForm = _origAddForm(prefix, containerId); // on récupère le nouveau form si possible
+    // Si on a ajouté un parent, on initialise son nom
+    if (prefix === 'parents') {
+      // _origAddForm ne renvoie rien : on récupère le dernier bloc ajouté
+      const container = document.getElementById(containerId);
+      const newlyAdded = container.querySelectorAll('.parent-form');
+      if (newlyAdded.length) {
+        afterAddParent(newlyAdded[newlyAdded.length - 1]);
+      }
+    }
+    return newForm;
+  };
+
+  // Au chargement, initialiser les formulaires déjà présents
+  updateParentsLastNames(familyInput ? familyInput.value : '');
+</script>
+
 {% endblock %}

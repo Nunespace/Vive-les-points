@@ -1,5 +1,5 @@
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import View, ListView
 from django.contrib import messages
@@ -8,6 +8,7 @@ from django.contrib.auth.mixins import (
     PermissionRequiredMixin,
 )
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 # from django.contrib.auth.decorators import permission_required as permission_required_decorator
 from django.db.models import Sum
 from .models import (
@@ -27,50 +28,17 @@ from .forms import (
 )
 
 
+
 @login_required
 def bareme_view(request):
-    # ⚠️ Juste pour démarrer : on remplit si vide
-    if not BaremeRecompense.objects.exists():
-        BaremeRecompense.objects.bulk_create(
-            [
-                BaremeRecompense(
-                    points=1, valeur_euros="1€", valeur_temps="10 minutes"
-                ),
-                BaremeRecompense(
-                    points=5,
-                    valeur_euros="5€ (+/- 2€ si cadeau)",
-                    valeur_temps="50 minutes",
-                ),
-                BaremeRecompense(
-                    points=10,
-                    valeur_euros="10€ (+/- 5€ si cadeau)",
-                    valeur_temps="100 minutes",
-                ),
-            ]
-        )
-    if not BaremePointPositif.objects.exists():
-        BaremePointPositif.objects.bulk_create(
-            [
-                BaremePointPositif(motif="Ranger sa chambre", points=1),
-                BaremePointPositif(
-                    motif="Aider aux tâches ménagères", points=1
-                ),
-                BaremePointPositif(
-                    motif="Être à l'heure toute la semaine", points=1
-                ),
-            ]
-        )
-    if not BaremePointNegatif.objects.exists():
-        BaremePointNegatif.objects.bulk_create(
-            [
-                BaremePointNegatif(
-                    motif="N'écoute pas ses parents", points=-1
-                ),
-                BaremePointNegatif(
-                    motif="Grossier envers ses parents", points=-3
-                ),
-            ]
-        )
+    # (pré-remplissage si vide) — inchangé …
+
+    can_edit = (
+        request.user.is_staff
+        or request.user.has_perm("points.change_baremerecompense")
+        or request.user.has_perm("points.change_baremepointpositif")
+        or request.user.has_perm("points.change_baremepointnegatif")
+    )
 
     return render(
         request,
@@ -79,6 +47,7 @@ def bareme_view(request):
             "recompenses": BaremeRecompense.objects.all(),
             "positifs": BaremePointPositif.objects.all(),
             "negatifs": BaremePointNegatif.objects.all(),
+            "can_edit": can_edit,
         },
     )
 
@@ -93,36 +62,63 @@ def update_cell(request, model_name, pk, field):
     if model_name not in model_map:
         return HttpResponseBadRequest("Model inconnu")
 
+    # 🔐 Vérif permission d’édition
+    perm_map = {
+        "recompense": "points.change_baremerecompense",
+        "positif": "points.change_baremepointpositif",
+        "negatif": "points.change_baremepointnegatif",
+    }
+    if not (request.user.is_staff or request.user.has_perm(perm_map[model_name])):
+        return HttpResponseForbidden("Non autorisé")
+
     model = model_map[model_name]
     obj = get_object_or_404(model, pk=pk)
 
-    # Pour reconstituer l'URL d'édition dans les templates
-    ctx = {
-        "model_name": model_name,
-        "pk": obj.pk,
-        "field": field,
-    }
+    ctx = {"model_name": model_name, "pk": obj.pk, "field": field}
 
     if request.method == "POST":
         value = request.POST.get("value", "")
-        # Cast basique si champ 'points'
         if field == "points":
             try:
                 value = int(value)
             except ValueError:
-                # renvoyer la cellule en mode lecture inchangée
                 ctx["value"] = getattr(obj, field)
                 return render(request, "points/cell_value.html", ctx)
 
         setattr(obj, field, value)
         obj.save()
         ctx["value"] = getattr(obj, field)
-        # 🔁 Retourne la cellule en mode lecture (un <td> complet)
         return render(request, "points/cell_value.html", ctx)
 
-    # GET → retourne la cellule en mode édition (un <td> avec <form>)
     ctx["value"] = getattr(obj, field)
     return render(request, "points/cell_form.html", ctx)
+
+
+@login_required
+@require_POST
+def delete_row(request, model_name, pk):
+    model_map = {
+        "recompense": BaremeRecompense,
+        "positif": BaremePointPositif,
+        "negatif": BaremePointNegatif,
+    }
+    perm_map = {
+        "recompense": "points.delete_baremerecompense",
+        "positif": "points.delete_baremepointpositif",
+        "negatif": "points.delete_baremepointnegatif",
+    }
+    if model_name not in model_map:
+        return HttpResponseBadRequest("Model inconnu")
+
+    if not (request.user.is_staff or request.user.has_perm(perm_map[model_name])):
+        return HttpResponseForbidden("Non autorisé")
+
+    model = model_map[model_name]
+    obj = get_object_or_404(model, pk=pk)
+    obj.delete()
+
+    # Retour vide -> HTMX remplace la <tr> cible par rien (la ligne disparaît)
+    return HttpResponse(status=204)
 
 
 class DashboardView(

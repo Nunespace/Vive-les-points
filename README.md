@@ -38,7 +38,7 @@ cd Vive-les-points
 pipenv install
 ```
 
-<sub> Vous pouvez activer votre environnement virtuel si vous voulez taper les commande sans mettre à chaque fois pipenv au début de chque commande. Voir [cette page](doc/installation_python-git-pipenv.md).
+<sub> Vous pouvez activer votre environnement virtuel si vous voulez taper les commande sans mettre à chaque fois *pipenv* au début de chaque commande. Voir [cette page](doc/installation_python-git-pipenv.md).
 
 ```
 pipenv shell

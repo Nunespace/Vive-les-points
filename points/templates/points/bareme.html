@@ -1,20 +1,52 @@
-<!-- points/templates/points/bareme.html -->
+{# points/templates/points/bareme.html #}
 {% extends "base.html" %}
 {% block content %}
 <div class="container my-4">
   <h2 class="page-title page-title-contrast">
     <span class="title-chip">Barème des récompenses</span>
   </h2>
-  <table class="table table-light table-striped table-hover">
+  <table class="table table-light table-striped table-hover align-middle">
     <thead>
-      <tr><th>Points</th><th>€</th><th>Temps</th></tr>
+      <tr>
+        <th>Points</th><th>€</th><th>Temps</th>
+        {% if can_edit %}<th class="text-end">Supprimer</th>{% endif %}
+      </tr>
     </thead>
     <tbody>
       {% for r in recompenses %}
       <tr>
-        <td hx-get="{% url 'points:update_cell' 'recompense' r.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ r.points }}</td>
-        <td hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_euros' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ r.valeur_euros }}</td>
-        <td hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_temps' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ r.valeur_temps }}</td>
+        <td
+          {% if can_edit %}
+          hx-get="{% url 'points:update_cell' 'recompense' r.id 'points' %}"
+          hx-trigger="click" hx-target="this" hx-swap="outerHTML"
+          {% endif %}>{{ r.points }}</td>
+
+        <td
+          {% if can_edit %}
+          hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_euros' %}"
+          hx-trigger="click" hx-target="this" hx-swap="outerHTML"
+          {% endif %}>{{ r.valeur_euros }}</td>
+
+        <td
+          {% if can_edit %}
+          hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_temps' %}"
+          hx-trigger="click" hx-target="this" hx-swap="outerHTML"
+          {% endif %}>{{ r.valeur_temps }}</td>
+
+        {% if can_edit %}
+        <td class="text-end">
+          <form
+            hx-post="{% url 'points:delete_row' 'recompense' r.id %}"
+            hx-target="closest tr" hx-swap="outerHTML"
+            onsubmit="return confirm('Supprimer cette ligne ?');"
+            class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i> Supprimer
+            </button>
+          </form>
+        </td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>
@@ -23,13 +55,27 @@
   <h2 class="page-title page-title-contrast">
     <span class="title-chip">Barème des points positifs</span>
   </h2>
-  <table class="table table-light table-striped table-hover">
-    <thead><tr><th>Motif</th><th>Points</th></tr></thead>
+  <table class="table table-light table-striped table-hover align-middle">
+    <thead>
+      <tr><th>Motif</th><th>Points</th>{% if can_edit %}<th class="text-end">Supprimer</th>{% endif %}</tr>
+    </thead>
     <tbody>
       {% for p in positifs %}
       <tr>
-        <td hx-get="{% url 'points:update_cell' 'positif' p.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ p.motif }}</td>
-        <td hx-get="{% url 'points:update_cell' 'positif' p.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ p.points }}</td>
+        <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'positif' p.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ p.motif }}</td>
+        <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'positif' p.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ p.points }}</td>
+        {% if can_edit %}
+        <td class="text-end">
+          <form hx-post="{% url 'points:delete_row' 'positif' p.id %}"
+                hx-target="closest tr" hx-swap="outerHTML"
+                onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i> Supprimer
+            </button>
+          </form>
+        </td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>
@@ -38,16 +84,31 @@
   <h2 class="page-title page-title-contrast">
     <span class="title-chip">Barème des points négatifs</span>
   </h2>
-  <table class="table table-light table-striped table-hover">
-    <thead><tr><th>Motif</th><th>Points</th></tr></thead>
+  <table class="table table-light table-striped table-hover align-middle">
+    <thead>
+      <tr><th>Motif</th><th>Points</th>{% if can_edit %}<th class="text-end">Supprimer</th>{% endif %}</tr>
+    </thead>
     <tbody>
       {% for n in negatifs %}
       <tr>
-        <td hx-get="{% url 'points:update_cell' 'negatif' n.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ n.motif }}</td>
-        <td hx-get="{% url 'points:update_cell' 'negatif' n.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML">{{ n.points }}</td>
+        <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'negatif' n.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ n.motif }}</td>
+        <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'negatif' n.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ n.points }}</td>
+        {% if can_edit %}
+        <td class="text-end">
+          <form hx-post="{% url 'points:delete_row' 'negatif' n.id %}"
+                hx-target="closest tr" hx-swap="outerHTML"
+                onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i> Supprimer
+            </button>
+          </form>
+        </td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 {% endblock %}
+
