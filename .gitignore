@@ -11,7 +11,7 @@ __pycache__/
 
 # 🛠️ Fichiers liés à l'environnement de développement
 .env
-.env.*
+.env.production
 .vscode/
 .idea/
 .vim
