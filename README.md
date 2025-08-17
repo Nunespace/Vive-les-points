@@ -37,6 +37,28 @@ cd Vive-les-points
 ```
 pipenv install
 ```
+
+<sub> Vous pouvez activer votre environnement virtuel si vous voulez taper les commande sans mettre à chaque fois pipenv au début de chque commande. Voir [cette page](doc/installation_python-git-pipenv.md).
+
+```
+pipenv shell
+
+```
+Si tu as bien sélectionné ton interpréteur Python (cf. étapes précédentes avec Python: Select Interpreter), alors VS Code utilisera automatiquement ton environnement Pipenv pour exécuter le code et lancer python.
+5. Renommer le fichier .env.dev en .env à la racine du projet, y mettre la clé secrète django :
+La clé peut être générer avec cette commande : 
+```
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+```
+Vérifier les migrations avec : 
+```
+pipenv run python manage.py showmigrations
+```
+
+6bis. Sinon, créer les tables nécessaires en base selon les fichiers de migration : 
+```
+pipenv run python manage.py migrate
     
 4. Démarrez le serveur avec :
 ```
