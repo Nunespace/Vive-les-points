@@ -16,7 +16,7 @@
     </div>
   {% endif %}
 
-  <form method="post" novalidate>
+  <form method="post" novalidate autocomplete="off">
     {% csrf_token %}
 
     <div class="card mb-4">
@@ -61,9 +61,9 @@
                     <i class="bi bi-eye"></i>
                   </button>
                 </div>
+                <div class="form-text">Laisser vide pour conserver le mot de passe actuel.</div>
                 <div class="text-danger small">{{ form.new_password.errors }}</div>
               </div>
-            </div>
             <div class="form-check mt-2">
               {{ form.DELETE }} <label class="form-check-label">Retirer ce parent (données supprimées)</label>
             </div>
@@ -103,6 +103,7 @@
                   <i class="bi bi-eye"></i>
                 </button>
               </div>
+              <div class="form-text">Laisser vide pour conserver le mot de passe actuel.</div>
               <div class="text-danger small">{{ form.new_password.errors }}</div>
             </div>
           </div>

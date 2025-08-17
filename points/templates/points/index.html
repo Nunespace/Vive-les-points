@@ -8,7 +8,9 @@
 
       {% for enfant in enfants_list %}
         <div class="{% if enfants_list|length == 1 %}col-10 col-sm-8 col-md-6 col-lg-4{% else %}col-6 col-lg-3{% endif %}">
-          <div class="text-center border border-info bg-info rounded p-3 h-100" style="font-family: 'Bungee Spice', sans-serif;">
+          <div class="text-center border border-info bg-info-transparent rounded p-3 h-100"
+              style="font-family: 'Bungee Spice', sans-serif;">
+
             
             <h2 class="fw-bold mb-2">{{ enfant.prenom }}</h2>
 
@@ -16,7 +18,9 @@
             <a class="btn btn-primary btn-lg p-3 m-1"
                href="{% url 'points:historique' enfant.id %}"
                role="button"
-               style="font-size: xx-large;">
+               style="font-size: xx-large;"
+               data-bs-toggle="tooltip"
+               title="Historique">
               {{ enfant.solde_points }}
             </a>
             <p class="mb-3">points.</p>

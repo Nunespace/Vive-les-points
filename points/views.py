@@ -1,5 +1,5 @@
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import View, ListView
 from django.contrib import messages
@@ -94,6 +94,7 @@ def update_cell(request, model_name, pk, field):
     return render(request, "points/cell_form.html", ctx)
 
 
+# points/views.py
 @login_required
 @require_POST
 def delete_row(request, model_name, pk):
@@ -107,9 +108,9 @@ def delete_row(request, model_name, pk):
         "positif": "points.delete_baremepointpositif",
         "negatif": "points.delete_baremepointnegatif",
     }
+
     if model_name not in model_map:
         return HttpResponseBadRequest("Model inconnu")
-
     if not (request.user.is_staff or request.user.has_perm(perm_map[model_name])):
         return HttpResponseForbidden("Non autorisé")
 
@@ -117,8 +118,50 @@ def delete_row(request, model_name, pk):
     obj = get_object_or_404(model, pk=pk)
     obj.delete()
 
-    # Retour vide -> HTMX remplace la <tr> cible par rien (la ligne disparaît)
-    return HttpResponse(status=204)
+    # <= 200 OK + chaîne vide : la <tr> ciblée est remplacée par rien => disparait
+    return HttpResponse("")
+
+
+@login_required
+@require_POST
+def add_row(request, model_name):
+    model_map = {
+        "recompense": BaremeRecompense,
+        "positif": BaremePointPositif,
+        "negatif": BaremePointNegatif,
+    }
+    add_perm_map = {
+        "recompense": "points.add_baremerecompense",
+        "positif": "points.add_baremepointpositif",
+        "negatif": "points.add_baremepointnegatif",
+    }
+    if model_name not in model_map:
+        return HttpResponseBadRequest("Model inconnu")
+
+    if not (request.user.is_staff or request.user.has_perm(add_perm_map[model_name])):
+        return HttpResponseForbidden("Non autorisé")
+
+    # Valeurs par défaut (à adapter si tu veux)
+    if model_name == "recompense":
+        obj = BaremeRecompense.objects.create(points=0, valeur_euros="", valeur_temps="")
+    elif model_name == "positif":
+        obj = BaremePointPositif.objects.create(motif="(nouveau)", points=1)
+    else:  # "negatif"
+        obj = BaremePointNegatif.objects.create(motif="(nouveau)", points=-1)
+
+    # Même logique que dans bareme_view pour l’édition
+    can_edit = (
+        request.user.is_staff
+        or request.user.has_perm("points.change_baremerecompense")
+        or request.user.has_perm("points.change_baremepointpositif")
+        or request.user.has_perm("points.change_baremepointnegatif")
+    )
+
+    return render(
+        request,
+        "points/row.html",
+        {"model_name": model_name, "obj": obj, "can_edit": can_edit},
+    )
 
 
 class DashboardView(

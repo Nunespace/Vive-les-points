@@ -3,9 +3,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
-from django.forms import formset_factory, inlineformset_factory
+from django.forms import formset_factory, inlineformset_factory, BaseFormSet
 from django.forms.widgets import HiddenInput
-
 from .models import Famille, Enfant, UserProfile
 
 User = get_user_model()
@@ -143,12 +142,6 @@ class EnfantSignupForm(forms.Form):
         return data
 
 
-# famille/forms.py
-from django.forms import BaseFormSet, formset_factory
-from django.core.exceptions import ValidationError
-
-# ...
-
 class BaseParentFormSet(BaseFormSet):
     def clean(self):
         super().clean()
@@ -181,9 +174,12 @@ class BaseEnfantFormSet(BaseFormSet):
 
 
 # Formsets utilisés sur la page d'inscription
-ParentFormSet = formset_factory(ParentUserForm, extra=1, can_delete=True, formset=BaseParentFormSet)
-EnfantSignupFormSet = formset_factory(EnfantSignupForm, extra=1, can_delete=True, formset=BaseEnfantFormSet)
-
+ParentFormSet = formset_factory(
+    ParentUserForm, extra=1, can_delete=True, formset=BaseParentFormSet
+)
+EnfantSignupFormSet = formset_factory(
+    EnfantSignupForm, extra=1, can_delete=True, formset=BaseEnfantFormSet
+)
 
 
 # ==============================================================
@@ -213,7 +209,14 @@ class ParentInlineForm(forms.Form):
     new_password = forms.CharField(
         label="Nouveau mot de passe (optionnel)",
         required=False,
-        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+        widget=forms.PasswordInput(
+            render_value=False,
+            attrs={
+                "class": "form-control",
+                "autocomplete": "new-password",  # empêche l'autofill "mot de passe actuel"
+                "placeholder": "Laisser vide pour conserver",
+            },
+        ),
     )
     DELETE = forms.BooleanField(required=False)
 
@@ -253,7 +256,14 @@ class EnfantManageForm(forms.ModelForm):
     new_password = forms.CharField(
         label="Mot de passe (si email saisi)",
         required=False,
-        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+        widget=forms.PasswordInput(
+            render_value=False,
+            attrs={
+                "class": "form-control",
+                "autocomplete": "new-password",
+                "placeholder": "Laisser vide pour conserver",
+            },
+        ),
     )
 
     class Meta:

@@ -12,34 +12,15 @@
         {% if can_edit %}<th class="text-end">Supprimer</th>{% endif %}
       </tr>
     </thead>
-    <tbody>
+    <tbody id="recompenses-body">
       {% for r in recompenses %}
       <tr>
-        <td
-          {% if can_edit %}
-          hx-get="{% url 'points:update_cell' 'recompense' r.id 'points' %}"
-          hx-trigger="click" hx-target="this" hx-swap="outerHTML"
-          {% endif %}>{{ r.points }}</td>
-
-        <td
-          {% if can_edit %}
-          hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_euros' %}"
-          hx-trigger="click" hx-target="this" hx-swap="outerHTML"
-          {% endif %}>{{ r.valeur_euros }}</td>
-
-        <td
-          {% if can_edit %}
-          hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_temps' %}"
-          hx-trigger="click" hx-target="this" hx-swap="outerHTML"
-          {% endif %}>{{ r.valeur_temps }}</td>
-
+        <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'recompense' r.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ r.points }}</td>
+        <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_euros' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ r.valeur_euros }}</td>
+        <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'recompense' r.id 'valeur_temps' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ r.valeur_temps }}</td>
         {% if can_edit %}
         <td class="text-end">
-          <form
-            hx-post="{% url 'points:delete_row' 'recompense' r.id %}"
-            hx-target="closest tr" hx-swap="outerHTML"
-            onsubmit="return confirm('Supprimer cette ligne ?');"
-            class="d-inline">
+          <form hx-post="{% url 'points:delete_row' 'recompense' r.id %}" hx-target="closest tr" hx-swap="outerHTML" onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-danger">
               <i class="bi bi-trash"></i> Supprimer
@@ -51,24 +32,33 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if can_edit %}
+  <form class="mt-2"
+        hx-post="{% url 'points:add_row' 'recompense' %}"
+        hx-target="#recompenses-body"
+        hx-swap="beforeend">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-plus-lg"></i> Ajouter une ligne
+    </button>
+  </form>
+  {% endif %}
 
-  <h2 class="page-title page-title-contrast">
+  <h2 class="page-title page-title-contrast mt-5">
     <span class="title-chip">Barème des points positifs</span>
   </h2>
   <table class="table table-light table-striped table-hover align-middle">
     <thead>
       <tr><th>Motif</th><th>Points</th>{% if can_edit %}<th class="text-end">Supprimer</th>{% endif %}</tr>
     </thead>
-    <tbody>
+    <tbody id="positifs-body">
       {% for p in positifs %}
       <tr>
         <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'positif' p.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ p.motif }}</td>
         <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'positif' p.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ p.points }}</td>
         {% if can_edit %}
         <td class="text-end">
-          <form hx-post="{% url 'points:delete_row' 'positif' p.id %}"
-                hx-target="closest tr" hx-swap="outerHTML"
-                onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
+          <form hx-post="{% url 'points:delete_row' 'positif' p.id %}" hx-target="closest tr" hx-swap="outerHTML" onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-danger">
               <i class="bi bi-trash"></i> Supprimer
@@ -80,24 +70,33 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if can_edit %}
+  <form class="mt-2"
+        hx-post="{% url 'points:add_row' 'positif' %}"
+        hx-target="#positifs-body"
+        hx-swap="beforeend">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-plus-lg"></i> Ajouter une ligne
+    </button>
+  </form>
+  {% endif %}
 
-  <h2 class="page-title page-title-contrast">
+  <h2 class="page-title page-title-contrast mt-5">
     <span class="title-chip">Barème des points négatifs</span>
   </h2>
   <table class="table table-light table-striped table-hover align-middle">
     <thead>
       <tr><th>Motif</th><th>Points</th>{% if can_edit %}<th class="text-end">Supprimer</th>{% endif %}</tr>
     </thead>
-    <tbody>
+    <tbody id="negatifs-body">
       {% for n in negatifs %}
       <tr>
         <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'negatif' n.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ n.motif }}</td>
         <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'negatif' n.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ n.points }}</td>
         {% if can_edit %}
         <td class="text-end">
-          <form hx-post="{% url 'points:delete_row' 'negatif' n.id %}"
-                hx-target="closest tr" hx-swap="outerHTML"
-                onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
+          <form hx-post="{% url 'points:delete_row' 'negatif' n.id %}" hx-target="closest tr" hx-swap="outerHTML" onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-danger">
               <i class="bi bi-trash"></i> Supprimer
@@ -109,6 +108,18 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if can_edit %}
+  <form class="mt-2"
+        hx-post="{% url 'points:add_row' 'negatif' %}"
+        hx-target="#negatifs-body"
+        hx-swap="beforeend">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-plus-lg"></i> Ajouter une ligne
+    </button>
+  </form>
+  {% endif %}
 </div>
 {% endblock %}
+
 

@@ -33,3 +33,14 @@ L'application peut être installée avec pipenv.
 Pipenv est un outil de gestion des dépendance et de gestion des environnements virtuel recommandé dans la [documentation sur le packaging de Python](https://packaging.python.org/tutorials/managing-dependencies/). Cette documentation décrit l'installation de pipenv sur les système d'exploitation Window, Macos et Linux.
 
 Un résumé de l'installation est disponible également en suivant ce lien : [Github-Openclassrooms-OCMovies-API](https://github.com/OpenClassrooms-Student-Center/OCMovies-API-EN-FR/blob/master/docs/pipenv/installation-fr.md)
+
+Pour activer l'environnement virtuel : 
+ ```
+pipenv shell
+
+```
+Si vous utilisez VS Code, sélectionnez l’interpréteur Python fourni par Pipenv :
+
+Ctrl+Shift+P → Python: Select Interpreter
+
+Choisissez l’environnement virtuel correspondant à ce projet.

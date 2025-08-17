@@ -102,9 +102,14 @@ class RegisterFamilyView(View):
         parent_formset = ParentFormSet(request.POST, prefix="parents")
         enfant_formset = EnfantSignupFormSet(request.POST, prefix="enfants")
 
-        if not (famille_form.is_valid() and parent_formset.is_valid() and enfant_formset.is_valid()):
+        if not (
+            famille_form.is_valid()
+            and parent_formset.is_valid()
+            and enfant_formset.is_valid()
+        ):
             # --- agrégateur d’erreurs (ajoute les non_form_errors) ---
             from django.utils.html import format_html, format_html_join
+
             error_messages = []
 
             # erreurs du form Famille
@@ -133,22 +138,31 @@ class RegisterFamilyView(View):
                     request,
                     format_html(
                         'Certains champs sont invalides :<ul class="mb-0">{}</ul>',
-                        format_html_join("", "<li>{}</li>", ((e,) for e in error_messages)),
+                        format_html_join(
+                            "", "<li>{}</li>", ((e,) for e in error_messages)
+                        ),
                     ),
                 )
 
             return render(
-                request, self.template_name,
-                {"famille_form": famille_form, "parent_formset": parent_formset, "enfant_formset": enfant_formset}
+                request,
+                self.template_name,
+                {
+                    "famille_form": famille_form,
+                    "parent_formset": parent_formset,
+                    "enfant_formset": enfant_formset,
+                },
             )
 
         # --- Ne garder que les formulaires remplis & non supprimés (création) ---
         parents_valids = [
-            f for f in parent_formset.forms
+            f
+            for f in parent_formset.forms
             if f.has_changed() and not f.cleaned_data.get("DELETE", False)
         ]
         enfants_valids = [
-            f for f in enfant_formset.forms
+            f
+            for f in enfant_formset.forms
             if f.has_changed() and not f.cleaned_data.get("DELETE", False)
         ]
 
@@ -171,7 +185,9 @@ class RegisterFamilyView(View):
                 last_name=cd["last_name"],
             )
             user.groups.add(parents_group)
-            UserProfile.objects.create(user=user, famille=famille, role="parent")
+            UserProfile.objects.create(
+                user=user, famille=famille, role="parent"
+            )
             if first_parent is None:
                 first_parent = user
 
@@ -192,7 +208,9 @@ class RegisterFamilyView(View):
                     last_name=famille.nom,
                 )
                 u.groups.add(enfants_group)
-                UserProfile.objects.create(user=u, famille=famille, role="enfant")
+                UserProfile.objects.create(
+                    user=u, famille=famille, role="enfant"
+                )
                 enfant_obj.user = u
                 enfant_obj.save(update_fields=["user"])
 
@@ -200,15 +218,17 @@ class RegisterFamilyView(View):
 
         # 5) Connexion du 1er parent
         if first_parent:
-            backend = getattr(settings, "AUTHENTICATION_BACKENDS",
-                            ["django.contrib.auth.backends.ModelBackend"])[0]
+            backend = getattr(
+                settings,
+                "AUTHENTICATION_BACKENDS",
+                ["django.contrib.auth.backends.ModelBackend"],
+            )[0]
             login(request, first_parent, backend=backend)
 
         return redirect("points:dashboard")
 
 
 register_family_view = RegisterFamilyView.as_view()
-
 
 
 # ===================================================================
@@ -304,7 +324,25 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             return self._delete_self_parent(request, famille)
 
         famille_form = FamilleForm(request.POST, instance=famille)
-        parent_formset = ParentInlineFormSet(request.POST, prefix="parents")
+
+        # >>> reconstruire le même "initial" que dans GET <<<
+        parents = self._parents_queryset(famille)
+        parent_initial = [
+            {
+                "user_id": u.id,
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+                "email": u.email,
+                "DELETE": False,
+            }
+            for u in parents
+        ]
+
+        parent_formset = ParentInlineFormSet(
+            request.POST,
+            prefix="parents",
+            initial=parent_initial,   # <<< clé du problème
+        )
         enfant_formset = EnfantInlineFormSet(
             request.POST, instance=famille, prefix="enfants"
         )
@@ -312,18 +350,12 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
         for form in parent_formset:
             form.famille = famille
 
-        if not (
-            famille_form.is_valid()
-            and parent_formset.is_valid()
-            and enfant_formset.is_valid()
-        ):
+        if not (famille_form.is_valid() and parent_formset.is_valid() and enfant_formset.is_valid()):
             logger.warning(
                 f"[ACCOUNT][POST] invalid form(s): auth={request.user.is_authenticated} "
                 f"session_key={getattr(request.session, 'session_key', None)}"
             )
-            messages.error(
-                request, "Merci de corriger les erreurs dans le formulaire."
-            )
+            messages.error(request, "Merci de corriger les erreurs dans le formulaire.")
             return render(
                 request,
                 self.template_name,
@@ -334,7 +366,7 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                 },
             )
 
-        # Détection changements
+        # Détection changements (inchangée)
         def formset_any_change(fs):
             if any(f.has_changed() for f in fs.forms):
                 return True
@@ -348,13 +380,11 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                 return True
             return False
 
-        changed = any(
-            [
-                famille_form.has_changed(),
-                formset_any_change(parent_formset),
-                formset_any_change(enfant_formset),
-            ]
-        )
+        changed = any([
+            famille_form.has_changed(),
+            formset_any_change(parent_formset),
+            formset_any_change(enfant_formset),
+        ])
         if not changed:
             messages.info(request, "Aucun changement détecté.")
             return redirect("famille:manage_account")

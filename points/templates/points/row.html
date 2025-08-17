@@ -1,0 +1,54 @@
+{# points/templates/points/row.html #}
+{% if model_name == "recompense" %}
+<tr>
+  <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'recompense' obj.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ obj.points }}</td>
+  <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'recompense' obj.id 'valeur_euros' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ obj.valeur_euros }}</td>
+  <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'recompense' obj.id 'valeur_temps' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ obj.valeur_temps }}</td>
+  {% if can_edit %}
+  <td class="text-end">
+    <form hx-post="{% url 'points:delete_row' 'recompense' obj.id %}"
+          hx-target="closest tr" hx-swap="outerHTML"
+          onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-trash"></i> Supprimer
+      </button>
+    </form>
+  </td>
+  {% endif %}
+</tr>
+{% elif model_name == "positif" %}
+<tr>
+  <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'positif' obj.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ obj.motif }}</td>
+  <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'positif' obj.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ obj.points }}</td>
+  {% if can_edit %}
+  <td class="text-end">
+    <form hx-post="{% url 'points:delete_row' 'positif' obj.id %}"
+          hx-target="closest tr" hx-swap="outerHTML"
+          onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-trash"></i> Supprimer
+      </button>
+    </form>
+  </td>
+  {% endif %}
+</tr>
+{% else %}{# negatif #}
+<tr>
+  <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'negatif' obj.id 'motif' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ obj.motif }}</td>
+  <td {% if can_edit %}hx-get="{% url 'points:update_cell' 'negatif' obj.id 'points' %}" hx-trigger="click" hx-target="this" hx-swap="outerHTML"{% endif %}>{{ obj.points }}</td>
+  {% if can_edit %}
+  <td class="text-end">
+    <form hx-post="{% url 'points:delete_row' 'negatif' obj.id %}"
+          hx-target="closest tr" hx-swap="outerHTML"
+          onsubmit="return confirm('Supprimer cette ligne ?');" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-trash"></i> Supprimer
+      </button>
+    </form>
+  </td>
+  {% endif %}
+</tr>
+{% endif %}

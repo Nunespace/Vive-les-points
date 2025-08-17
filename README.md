@@ -1,4 +1,4 @@
-![logo-image](doc/vive_les_points.png)
+![logo-image](doc/vive-les-points.png)
 
 # Vive les points! 
 
@@ -40,38 +40,29 @@ pipenv install
 
 <sub> Vous pouvez activer votre environnement virtuel si vous voulez taper les commande sans mettre à chaque fois *pipenv* au début de chaque commande. Voir [cette page](doc/installation_python-git-pipenv.md).
 
-```
-pipenv shell
 
-```
-Si tu as bien sélectionné ton interpréteur Python (cf. étapes précédentes avec Python: Select Interpreter), alors VS Code utilisera automatiquement ton environnement Pipenv pour exécuter le code et lancer python.
-5. Renommer le fichier .env.dev en .env à la racine du projet, y mettre la clé secrète django :
+4. Renommer le fichier .env.dev en .env à la racine du projet, y mettre la clé secrète django :
 La clé peut être générer avec cette commande : 
 ```
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 
-```
-Vérifier les migrations avec : 
-```
-pipenv run python manage.py showmigrations
-```
 
-6bis. Sinon, créer les tables nécessaires en base selon les fichiers de migration : 
-```
+5. Créer les tables nécessaires en base selon les fichiers de migration : 
+
 pipenv run python manage.py migrate
     
-4. Démarrez le serveur avec :
+6. Démarrez le serveur avec :
 ```
 pipenv run python manage.py runserver
 ```
-5. Ouvrez votre navigateur et entrez l’URL comme indiqué sur le terminal pour démarrer l'application web :
+7. Ouvrez votre navigateur et entrez l’URL comme indiqué sur le terminal pour démarrer l'application web :
 
 http://127.0.0.1:8000/points/
 
-6. Pour quitter le serveur, appuyez sur *CTRL+C*
+8. Pour quitter le serveur, appuyez sur *CTRL+C*
 
 
-Pour les lancements ultérieurs du serveur, il suffit d'exécuter les étape 4 et 5 à partir du répertoire racine du projet.
+Pour les lancements ultérieurs du serveur, il suffit d'exécuter les étapes 6 et 7 à partir du répertoire racine du projet.
 
 ## Administration du site
 

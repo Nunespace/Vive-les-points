@@ -1,3 +1,4 @@
+{# points/templates/points/cell_value.html #}
 <td
   hx-get="{% url 'points:update_cell' model_name pk field %}"
   hx-trigger="click"
@@ -6,3 +7,4 @@
   style="cursor:pointer">
   {{ value }}
 </td>
+

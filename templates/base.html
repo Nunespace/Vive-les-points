@@ -24,7 +24,13 @@
   <header>
     <div class="container">
       <a class="text-center" href="{% url 'points:dashboard' %}">
-        <h1 class="p-1 text-light" style="font-family: 'Bungee Spice', sans-serif;">Vive les Points!</h1>
+        <h1 class="p-1 text-light"
+            style="font-family: 'Bungee Spice', sans-serif;"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            title="Tableau de bord">
+          Vive les Points!
+        </h1>
       </a>
     </div>
   </header>
@@ -74,7 +80,16 @@
 
       <!-- Col droite : copyright + don -->
       <div class="col-12 col-md-4 d-flex justify-content-end align-items-center gap-2">
-        <p class="text-dark m-0">© 2025 - Mathieu Cazenave</p>
+        <p class="text-dark m-0">
+          © 2025 - 
+          <a href="mailto:nunespace@gmail.com"
+             class="text-dark text-decoration-underline"
+             data-bs-toggle="tooltip"
+             data-bs-placement="top"
+             title="Contact">
+            Nunespace
+          </a>
+        </p>
         <a href="https://paypal.me/nunespace17"
            class="btn btn-primary btn-sm"
            target="_blank" rel="noopener"
@@ -99,7 +114,16 @@
 
       <!-- Col droite : copyright + don -->
       <div class="col-12 col-md-6 d-flex justify-content-end align-items-center gap-2">
-        <p class="text-dark m-0">© 2025 - Mathieu Cazenave</p>
+        <p class="text-dark m-0">
+          © 2025 - 
+          <a href="mailto:nunespace@gmail.com"
+             class="text-dark text-decoration-underline"
+             data-bs-toggle="tooltip"
+             data-bs-placement="top"
+             title="Contact">
+            Nunespace
+          </a>
+        </p>
         <a href="https://paypal.me/nunespace17"
            class="btn btn-primary btn-sm"
            target="_blank" rel="noopener"

@@ -30,6 +30,10 @@ body::before {
     z-index: -1; /* derrière tout le contenu */
 }
 
+/* Couleur de fond info (avec transparence) */
+.bg-info-transparent {
+  background-color: rgba(13, 202, 240, 0.92); /* bleu info Bootstrap avec transparence */
+}
 
 /* Couleur de fond du body */
 /* Titre de page */
