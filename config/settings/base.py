@@ -220,8 +220,8 @@ MANAGERS = ADMINS
 
 
 # Expéditeur et préfixe des sujets
-SERVER_EMAIL = "errors@dgpython.fr"          # From des mails d’erreurs
-DEFAULT_FROM_EMAIL = "no-reply@dgpython.fr"  # From par défaut de ton site
+SERVER_EMAIL = "mathieu@vive-les-points.fr"          # From des mails d’erreurs
+DEFAULT_FROM_EMAIL = "mathieu@vive-les-points.fr"  # From par défaut de ton site
 EMAIL_SUBJECT_PREFIX = "[Vive les Points] "
 
 # Backend email (exemple SMTP générique — remplace par ton fournisseur)

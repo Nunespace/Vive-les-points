@@ -1,4 +1,4 @@
-![logo-image](doc/vive-les-points.png)
+![logo-image](doc/vive-les-points_titre.png)
 
 # Vive les points! 
 
