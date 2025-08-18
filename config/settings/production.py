@@ -6,6 +6,7 @@ import logging
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from django.core.exceptions import DisallowedHost
+from urllib.parse import urlparse
 import pymysql
 from .base import env
 
@@ -113,12 +114,6 @@ LOGGING = {
 
 
 # --- SENTRY ---
-import logging
-import sentry_sdk
-from django.core.exceptions import DisallowedHost
-from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.logging import LoggingIntegration
-from urllib.parse import urlparse
 
 def _sentry_before_send(event, hint):
     # 1) Bruit : DisallowedHost
