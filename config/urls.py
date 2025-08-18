@@ -3,6 +3,10 @@ from django.contrib import admin
 from django.conf import settings
 from django.urls import include, path
 from django.views.generic.base import RedirectView
+from sentry_sdk.integrations.django import DjangoIntegration
+
+def trigger_error(request):
+    division_by_zero = 1 / 0
 
 urlpatterns = [
     path("", include("famille.urls")),
@@ -10,6 +14,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Redirection racine vers /login/
     path('', RedirectView.as_view(url='/login/', permanent=True)),
+    path('sentry-debug/', trigger_error),
 ]
 
 if settings.DEBUG:
