@@ -85,7 +85,7 @@ ADMIN_URL = env("DJANGO_ADMIN_URL")
 # Clickjacking
 X_FRAME_OPTIONS = "DENY"
 
-# --- LOGGING (garde ton mail_admins + console) ---
+# --- LOGGING---
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
