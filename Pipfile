@@ -14,6 +14,7 @@ django-unique-user-email = "*"
 flake8-tidy-imports = "*"
 flake8 = "*"
 argon2-cffi = "*"
+sentry-sdk = "*"
 
 [dev-packages]
 pytest-django = "*"
