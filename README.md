@@ -119,7 +119,7 @@ Un nouveau dossier *htmlcov* est ainsi créé à l'endroit où vous avez lancé 
 
 Le linting sur l'ensemble du code peut être exécuté avec Flake8.
 
-Exécutez, à partir de la  racine du projet, la commande suivante[^2] : 
+Exécutez, à partir de la  racine du projet, la commande suivante : 
 ```
 pipenv run flake8
 ```
