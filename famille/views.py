@@ -575,7 +575,7 @@ class DeleteFamilyView(LoginRequiredMixin, View):
             request,
             "La famille et tous les comptes associés ont été supprimés définitivement.",
         )
-        return redirect("home")  # adapte au nom de ta route d’accueil
+        return redirect("famille:login")
 
 
 family_delete_view = DeleteFamilyView.as_view()

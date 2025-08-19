@@ -15,6 +15,7 @@ flake8-tidy-imports = "*"
 flake8 = "*"
 argon2-cffi = "*"
 sentry-sdk = "*"
+pytest-django = "*"
 
 [dev-packages]
 pytest-django = "*"

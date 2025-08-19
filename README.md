@@ -45,6 +45,7 @@ pipenv install
 La clé peut être générer avec cette commande : 
 ```
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
 
 
 5. Créer les tables nécessaires en base selon les fichiers de migration : 
@@ -85,3 +86,43 @@ pipenv run python manage.py runserver
 
 4. Entrer votre identifiant et votre mot de passe pour accéder au site d'administration de Django : ce site permet de gérer toutes les opérations [CRUD](https://openclassrooms.com/fr/courses/7172076-debutez-avec-le-framework-django/7516605-effectuez-des-operations-crud-dans-ladministration-de-django) sur les données de l'applications (création, modification, effacement, mise à jour des enfants, des points positifs et des points négatifs).
 
+
+## Déploiement
+
+Le projet est hébergé chez o2switch
+
+## Tests et linting
+
+
+### Lancement des tests
+Les tests de ce projet ont été écrits avec le framework pytest.
+
+Ils sont executables avec la commande [^2]: 
+```
+pipenv run pytest
+```
+
+### Couverture de test
+
+Ce projet contient la librairie Python Coverage.py qui fournit un rapport qui nous donne le pourcentage de couverture de ligne par fichier source de couverture. Ce rapport peut être obtenu avec cette commande[^2] : 
+```
+pipenv run pytest --cov=.
+```
+Un rapport HTML, plus détaillé, peut aussi être généré en tapant[^2] : 
+```
+pipenv run pytest --cov=. --cov-report html
+```
+Un nouveau dossier *htmlcov* est ainsi créé à l'endroit où vous avez lancé la commande. Avec votre navigateur, ouvrez le fichier *index.html*  qui contient un résumé du rapport de couverture. À partir de cette page, vous pourrez naviguer à travers les différents fichiers afin d’avoir le détail sur la couverture.
+
+
+### Linting
+
+Le linting sur l'ensemble du code peut être exécuté avec Flake8.
+
+Exécutez, à partir de la  racine du projet, la commande suivante[^2] : 
+```
+pipenv run flake8
+```
+
+[^1]: L’application nécessite un fichier *.env*, qui contient notamment la clé secrète Django non présente dans ce dépôt github.
+[^2]: Si vous utilisez *pip*, activer votre environnement virtuel et enlever *pipenv run* :
