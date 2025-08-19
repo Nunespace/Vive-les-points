@@ -264,10 +264,9 @@ class EnfantManageForm(forms.ModelForm):
 
     class Meta:
         model = Enfant
-        fields = ["prenom", "solde_points"]
+        fields = ["prenom"]
         widgets = {
             "prenom": forms.TextInput(attrs={"class": "form-control"}),
-            "solde_points": forms.NumberInput(attrs={"class": "form-control"}),
         }
 
     def __init__(self, *args, **kwargs):

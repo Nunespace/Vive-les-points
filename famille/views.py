@@ -132,6 +132,8 @@ class RegisterFamilyView(View):
                 for field, errors in form.errors.items():
                     for err in errors:
                         error_messages.append(f"Enfant {i} – {field} : {err}")
+                for err in form.non_field_errors():
+                    error_messages.append(f"Enfant {i} – {err}")
 
             if error_messages:
                 messages.error(

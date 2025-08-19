@@ -83,19 +83,15 @@
         <div class="border rounded p-3 mb-3 enfant-form">
           {{ form.id }}
           <div class="row g-3">
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label class="form-label">Prénom</label>{{ form.prenom }}
               <div class="text-danger small">{{ form.prenom.errors }}</div>
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Solde points</label>{{ form.solde_points }}
-              <div class="text-danger small">{{ form.solde_points.errors }}</div>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label class="form-label">Email (facultatif)</label>{{ form.email }}
               <div class="text-danger small">{{ form.email.errors }}</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label class="form-label">Mot de passe</label>
               <div class="input-group">
                 {{ form.new_password }}

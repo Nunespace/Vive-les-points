@@ -98,11 +98,9 @@ def test_register_post_creates_family_parents_enfants_and_logs_first_parent(
             f"{enfants_prefix}-MAX_NUM_FORMS": "1000",
         },
         f"{enfants_prefix}-0-prenom": "Léa",
-        f"{enfants_prefix}-0-solde_points": "0",
         f"{enfants_prefix}-0-email": "lea@example.com",
         f"{enfants_prefix}-0-password": "pwd",
         f"{enfants_prefix}-1-prenom": "Tom",
-       
         f"{enfants_prefix}-1-email": "",
         f"{enfants_prefix}-1-password": "",
     }
@@ -126,6 +124,7 @@ def test_register_post_creates_family_parents_enfants_and_logs_first_parent(
     assert enfants.count() == 2
     lea = enfants.get(prenom="Léa")
     tom = enfants.get(prenom="Tom")
+    assert Enfant.objects.get(famille=fam, prenom="Tom").solde_points == 0
 
     # Léa a un compte user + profil enfant
     assert lea.user is not None
@@ -340,12 +339,14 @@ def test_manage_post_delete_last_parent_guard_raises(
         client.post(reverse("famille:manage_account"), data)
 
 
+# --- ManageFamilyAccountView : ajout d’un enfant ---
+
+
 @pytest.mark.django_db
 def test_manage_post_add_enfant_and_user(
     client, userprofile_parent, parent_user, famille
 ):
     client.force_login(parent_user)
-
     parents_prefix = "parents"
     enfants_prefix = "enfants"
 
@@ -364,7 +365,7 @@ def test_manage_post_add_enfant_and_user(
         f"{parents_prefix}-0-email": parent_user.email,
         f"{parents_prefix}-0-new_password": "",
         f"{parents_prefix}-0-DELETE": "",
-        # enfants: 1 nouveau
+        # enfants: 1 nouveau (sans solde_points)
         **{
             f"{enfants_prefix}-TOTAL_FORMS": "1",
             f"{enfants_prefix}-INITIAL_FORMS": "0",
@@ -372,7 +373,7 @@ def test_manage_post_add_enfant_and_user(
             f"{enfants_prefix}-MAX_NUM_FORMS": "1000",
         },
         f"{enfants_prefix}-0-prenom": "Nina",
-        f"{enfants_prefix}-0-solde_points": "5",
+        # f"{enfants_prefix}-0-solde_points": "5",  # <-- SUPPRIMÉ
         f"{enfants_prefix}-0-email": "nina@example.com",
         f"{enfants_prefix}-0-new_password": "pwd",
         f"{enfants_prefix}-0-DELETE": "",

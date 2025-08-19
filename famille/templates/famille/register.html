@@ -127,15 +127,17 @@
     const newForm = firstForm.cloneNode(true);
 
     // reset champs
+    const re = new RegExp(`${prefix}-\\d+-`);
     newForm.querySelectorAll('input').forEach(inp => {
-      if (inp.type === 'checkbox') { inp.checked = false; return; }
-      inp.value = '';
-      inp.name = inp.name.replace(`${prefix}-0-`, `${prefix}-${total}-`);
-      inp.id = inp.id.replace(`${prefix}-0-`, `${prefix}-${total}-`);
+      if (inp.type === 'checkbox') inp.checked = false; else inp.value = '';
+      if (inp.name) inp.name = inp.name.replace(re, `${prefix}-${total}-`);
+      if (inp.id)   inp.id   = inp.id.replace(re, `${prefix}-${total}-`);
     });
+
 
     container.appendChild(newForm);
     totalFormsInput.value = total + 1;
+    return newForm; 
   }
 
   document.getElementById('add-parent').addEventListener('click', () => addForm('parents', 'parents-container'));
