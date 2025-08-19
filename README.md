@@ -124,5 +124,3 @@ Exécutez, à partir de la  racine du projet, la commande suivante[^2] :
 pipenv run flake8
 ```
 
-[^1]: L’application nécessite un fichier *.env*, qui contient notamment la clé secrète Django non présente dans ce dépôt github.
-[^2]: Si vous utilisez *pip*, activer votre environnement virtuel et enlever *pipenv run* :
