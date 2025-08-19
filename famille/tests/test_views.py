@@ -102,7 +102,7 @@ def test_register_post_creates_family_parents_enfants_and_logs_first_parent(
         f"{enfants_prefix}-0-email": "lea@example.com",
         f"{enfants_prefix}-0-password": "pwd",
         f"{enfants_prefix}-1-prenom": "Tom",
-        f"{enfants_prefix}-1-solde_points": "3",
+       
         f"{enfants_prefix}-1-email": "",
         f"{enfants_prefix}-1-password": "",
     }

@@ -97,11 +97,7 @@ class EnfantSignupForm(forms.Form):
         max_length=200,
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
-    solde_points = forms.IntegerField(
-        label="Solde initial",
-        initial=0,
-        widget=forms.NumberInput(attrs={"class": "form-control"}),
-    )
+    
     email = forms.EmailField(
         label="Email (facultatif)",
         required=False,

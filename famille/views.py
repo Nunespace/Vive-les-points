@@ -196,7 +196,6 @@ class RegisterFamilyView(View):
             cd = form.cleaned_data
             enfant_obj = Enfant.objects.create(
                 prenom=cd["prenom"],
-                solde_points=cd.get("solde_points") or 0,
                 famille=famille,
             )
             if cd.get("email"):

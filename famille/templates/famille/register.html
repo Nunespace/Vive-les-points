@@ -82,18 +82,15 @@
           <div class="border rounded p-3 mb-3 enfant-form">
             {{ form.non_field_errors }}
             <div class="row g-3">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label">Prénom</label>{{ form.prenom }}{{ form.prenom.errors }}
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Solde initial</label>{{ form.solde_points }}{{ form.solde_points.errors }}
-              </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label">Email (facultatif)</label>{{ form.email }}{{ form.email.errors }}
               </div>
 
               <!-- Mot de passe enfant -->
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label">Mot de passe (si email)</label>
                 <div class="input-group">
                   {{ form.password }}
