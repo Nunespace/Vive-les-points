@@ -16,6 +16,8 @@ flake8 = "*"
 argon2-cffi = "*"
 sentry-sdk = "*"
 pytest-django = "*"
+coverage = "*"
+pytest-cov = "*"
 
 [dev-packages]
 pytest-django = "*"

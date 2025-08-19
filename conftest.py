@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from famille.models import Famille, UserProfile, Enfant
 
 # ... ton conftest actuel ...
@@ -72,3 +73,22 @@ def userprofile_enfant(famille, enfant_user):
     return UserProfile.objects.create(
         user=enfant_user, famille=famille, role="enfant"
     )
+
+
+@pytest.fixture
+def give_perms():
+    """
+    Utilitaire: attribue une liste de permissions (par codenames) à un utilisateur.
+    Usage: give_perms(user, ["points.view_pointpositif", ...])
+    """
+
+    def _give(user, codenames):
+        perms = Permission.objects.filter(
+            codename__in=[c.split(".")[-1] for c in codenames]
+        )
+        for p in perms:
+            user.user_permissions.add(p)
+        user.refresh_from_db()
+        return user
+
+    return _give

@@ -1,0 +1,13 @@
+[run]
+
+source =
+    famille
+    points
+omit =
+    */migrations/*
+    */tests/*
+    manage.py
+    config/*
+    conftest.py
+    passenger_wsgi.py
+
