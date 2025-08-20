@@ -31,7 +31,6 @@ from .forms import (
 
 @login_required
 def bareme_view(request):
-    # (pré-remplissage si vide) — inchangé …
 
     can_edit = (
         request.user.is_staff
@@ -40,6 +39,30 @@ def bareme_view(request):
         or request.user.has_perm("points.change_baremepointnegatif")
     )
 
+    # ⚠️ Juste pour démarrer : on remplit si vide
+    if not BaremeRecompense.objects.exists():
+        BaremeRecompense.objects.bulk_create(
+            [
+                BaremeRecompense(points=1, valeur_euros="1€", valeur_temps="10 minutes"),
+                BaremeRecompense(points=5, valeur_euros="5€ (+/- 2€ si cadeau)", valeur_temps="50 minutes"),
+                BaremeRecompense(points=10, valeur_euros="10€ (+/- 5€ si cadeau)", valeur_temps="100 minutes"),
+            ]
+        )
+    if not BaremePointPositif.objects.exists():
+        BaremePointPositif.objects.bulk_create(
+            [
+                BaremePointPositif(motif="Ranger sa chambre", points=1),
+                BaremePointPositif(motif="Aider aux tâches ménagères", points=1),
+                BaremePointPositif(motif="Être à l'heure toute la semaine", points=1),
+            ]
+        )
+    if not BaremePointNegatif.objects.exists():
+        BaremePointNegatif.objects.bulk_create(
+            [
+                BaremePointNegatif(motif="N'écoute pas ses parents", points=-1),
+                BaremePointNegatif(motif="Grossier envers ses parents", points=-3),
+            ]
+        )
     return render(
         request,
         "points/bareme.html",
