@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import bareme_view, delete_row, update_cell, DashboardView, historique_editable, new_points_view, add_row
+from .views import bareme_view, delete_row, update_cell, DashboardView, historique_editable, new_points_view, add_row, HomeView
 
 app_name = "points"
 

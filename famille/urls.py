@@ -12,5 +12,4 @@ urlpatterns = [
     path("inscription/", register_family_view, name="register"),
     path("compte/", family_manage_view, name="manage_account"),
     path("supprimer-famille/", family_delete_view, name="delete_family"),
-    
 ]

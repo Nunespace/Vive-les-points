@@ -1,7 +1,7 @@
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
-from django.views.generic import View, ListView
+from django.views.generic import View, ListView, TemplateView
 from django.contrib import messages
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
@@ -26,6 +26,10 @@ from .forms import (
     PointPositifFormSet,
     PointNegatifFormSet,
 )
+
+
+class HomeView(TemplateView):
+    template_name = "points/home.html"
 
 
 

@@ -8,6 +8,7 @@ def en_construction(request):
     return HttpResponse("<h1>🚧 Site en construction 🚧</h1><p>Contact : nunespace@gmail.com</p>")
 
 
+
 def handler404(request, exception):
     "Renvoie une page personnalisée 404 en cas d'erreur de page non trouvée"
     # capture_message("This page was not found.", level="error")
