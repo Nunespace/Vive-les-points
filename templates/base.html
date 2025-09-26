@@ -8,7 +8,11 @@
   <meta name="google-site-verification" content="C65iwhxtGd0Ua7KRoCsM5Ly9umQNrsCrsz7qPTLCozk" />
   <title>{% block title %}Vive les Points | Vive les Points{% endblock title %}</title>
 
-  <link rel="canonical" href="{{ request.build_absolute_uri|cut:'://www.' }}">
+  {% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+  {% if not debug %}
+  <link rel="canonical" href="https://vive-les-points.fr{{ request.path }}">
+  {% endif %}
+
 
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
