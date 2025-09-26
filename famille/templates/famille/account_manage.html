@@ -6,15 +6,6 @@
     <span class="title-chip">Mon compte famille</span>
   </h1>
 
-  {# Bloc global d'erreurs #}
-  {% if famille_form.errors or parent_formset.errors or parent_formset.non_form_errors or enfant_formset.errors or enfant_formset.non_form_errors %}
-    <div class="alert alert-danger">
-      <strong>Merci de corriger les erreurs suivantes :</strong>
-      <ul class="mb-0">
-        {# … erreurs inchangées … #}
-      </ul>
-    </div>
-  {% endif %}
 
   <form method="post" novalidate autocomplete="off">
     {% csrf_token %}
@@ -67,7 +58,7 @@
                     <i class="bi bi-eye"></i>
                   </button>
                 </div>
-                <div class="form-text">Laisser vide pour conserver le mot de passe actuel.</div>
+                <div class="form-text js-pwd-help">Laisser vide pour conserver le mot de passe actuel.</div>
                 <div class="text-danger small">{{ form.new_password.errors }}</div>
               </div>
             <div class="form-check mt-2">
@@ -132,39 +123,99 @@
 </div>
 
 <script>
-  // JS duplication formsets (inchangé)
-  document.getElementById('add-parent').addEventListener('click', () => {
-    const container = document.getElementById('parents-container');
-    const totalInput = container.querySelector('input[name="parents-TOTAL_FORMS"]');
-    const total = parseInt(totalInput.value, 10);
-    const first = container.querySelector('.parent-form');
-    const clone = first.cloneNode(true);
+  // --- Helpers --------------------------------------------------------------
+  function renameFormsetBlock(block, prefix, index) {
+    const re = new RegExp(`${prefix}-\\d+-`, 'g');
+    block.querySelectorAll('[name^="'+prefix+'-"], [id^="'+prefix+'-"]').forEach(el => {
+      if (el.name) el.name = el.name.replace(re, `${prefix}-${index}-`);
+      if (el.id)   el.id   = el.id.replace(re, `${prefix}-${index}-`);
+    });
+  }
 
-    clone.querySelectorAll('input').forEach(inp => {
+  function resetInputs(block) {
+    block.querySelectorAll('input').forEach(inp => {
       if (inp.type === 'checkbox') { inp.checked = false; return; }
       inp.value = '';
-      inp.name = inp.name.replace(`parents-0-`, `parents-${total}-`);
-      inp.id   = inp.id.replace(`parents-0-`, `parents-${total}-`);
     });
-    container.appendChild(clone);
-    totalInput.value = total + 1;
+  }
+
+  // --- Config UI pour un bloc "parent" (existant vs nouveau) ---------------
+  function configureParentBlock(block) {
+    const userId = block.querySelector('input[name$="-user_id"]');
+    const pwd    = block.querySelector('input[name$="-new_password"]');
+    const help   = block.querySelector('.js-pwd-help');
+    const del    = block.querySelector('input[name$="-DELETE"]');
+    const isExisting = !!(userId && userId.value);
+
+    if (pwd) {
+      if (isExisting) {
+        pwd.required = false;
+        pwd.placeholder = "Laisser vide pour conserver";
+        if (help) help.textContent = "Laisser vide pour conserver le mot de passe actuel.";
+      } else {
+        pwd.required = true;
+        pwd.placeholder = "Choisir un mot de passe";
+        if (help) help.textContent = "Mot de passe requis pour un nouveau parent.";
+      }
+    }
+    if (del && pwd) {
+      del.addEventListener('change', () => {
+        // si on supprime un nouveau parent, ne bloque pas sur required
+        pwd.required = !isExisting && !del.checked;
+      });
+    }
+  }
+
+  // --- Délégation : bouton œil pour tous les champs mdp --------------------
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-password');
+    if (!btn) return;
+    const input = btn.closest('.input-group')?.querySelector('input');
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
   });
 
-  document.getElementById('add-enfant').addEventListener('click', () => {
-    const container = document.getElementById('enfants-container');
-    const totalInput = container.querySelector('input[name="enfants-TOTAL_FORMS"]');
-    const total = parseInt(totalInput.value, 10);
-    const first = container.querySelector('.enfant-form');
-    const clone = first.cloneNode(true);
+  // --- Config initiale des blocs existants ---------------------------------
+  document.querySelectorAll('#parents-container .parent-form').forEach(configureParentBlock);
 
-    clone.querySelectorAll('input').forEach(inp => {
-      if (inp.type === 'checkbox') { inp.checked = false; return; }
-      inp.value = '';
-      inp.name = inp.name.replace(`enfants-0-`, `enfants-${total}-`);
-      inp.id   = inp.id.replace(`enfants-0-`, `enfants-${total}-`);
-    });
+  // --- Ajout d'un PARENT ----------------------------------------------------
+  document.getElementById('add-parent').addEventListener('click', () => {
+    const container  = document.getElementById('parents-container');
+    const totalInput = container.querySelector('input[name="parents-TOTAL_FORMS"]');
+    const index      = parseInt(totalInput.value, 10);
+
+    const first  = container.querySelector('.parent-form');
+    const clone  = first.cloneNode(true);
+
+    // reset et reindex
+    resetInputs(clone);
+    renameFormsetBlock(clone, 'parents', index);
+
+    // s'assurer que user_id est vide (nouvelle ligne)
+    const userId = clone.querySelector('input[name$="-user_id"]');
+    if (userId) userId.value = '';
+
     container.appendChild(clone);
-    totalInput.value = total + 1;
+    totalInput.value = index + 1;
+
+    configureParentBlock(clone);
+  });
+
+  // --- Ajout d'un ENFANT ----------------------------------------------------
+  document.getElementById('add-enfant').addEventListener('click', () => {
+    const container  = document.getElementById('enfants-container');
+    const totalInput = container.querySelector('input[name="enfants-TOTAL_FORMS"]');
+    const index      = parseInt(totalInput.value, 10);
+
+    const first  = container.querySelector('.enfant-form');
+    const clone  = first.cloneNode(true);
+
+    resetInputs(clone);
+    renameFormsetBlock(clone, 'enfants', index);
+
+    container.appendChild(clone);
+    totalInput.value = index + 1;
   });
 </script>
+
 {% endblock %}

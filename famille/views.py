@@ -14,6 +14,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
+from django.utils.crypto import get_random_string
 import logging
 from .forms import (
     EmailAuthenticationForm,
@@ -320,7 +321,7 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
 
         famille = request.user.profile.famille
 
-        # suppression globale de la famille (nouveau)
+        # suppression globale de la famille
         if "delete_family" in request.POST:
             return self._delete_family(request, famille)
 
@@ -361,26 +362,28 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
 
         # >>> Empêcher de finir à 0 parent via le formset
         existing_count = parents.count()
-
-        # parent_formset.cleaned_data est une liste de dicts (un par formulaire)
         post_deletes = 0
         post_adds = 0
         for cd in parent_formset.cleaned_data:
             if not cd:
                 continue
-            # suppression d'un parent existant ?
             if cd.get("user_id") and cd.get("DELETE"):
                 post_deletes += 1
-            # ajout d'un nouveau parent (form extra non vide, non supprimé)
             if not cd.get("user_id") and not cd.get("DELETE"):
                 if any(cd.get(f) for f in ("first_name", "last_name", "email", "new_password")):
                     post_adds += 1
 
         remaining = existing_count - post_deletes + post_adds
         if remaining < 1:
-            parent_formset.add_error(None, "Impossible de supprimer le dernier parent. Ajoutez d'abord un autre parent.")
+            # marquer la case concernée
+            for i, cd in enumerate(parent_formset.cleaned_data):
+                if cd and cd.get("user_id") and cd.get("DELETE"):
+                    parent_formset.forms[i].add_error("DELETE", "Impossible de supprimer le dernier parent.")
+                    break
+            messages.error(request, "Impossible de supprimer le dernier parent. Ajoutez d’abord un autre parent.")
             return render(
-                request, self.template_name,
+                request,
+                self.template_name,
                 {
                     "famille_form": famille_form,
                     "parent_formset": parent_formset,
@@ -388,7 +391,30 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                 },
             )
 
-        # Détection changements (inchangée)
+        # >>> Mot de passe obligatoire pour tout NOUVEAU parent
+        missing_pwd = False
+        for form in parent_formset.forms:
+            cd = getattr(form, "cleaned_data", {}) or {}
+            if not cd or cd.get("DELETE"):
+                continue
+            is_new = not cd.get("user_id")
+            has_fields = any(cd.get(f) for f in ("first_name", "last_name", "email"))
+            if is_new and has_fields and not cd.get("new_password"):
+                form.add_error("new_password", "Mot de passe requis pour un nouveau parent.")
+                missing_pwd = True
+        if missing_pwd:
+            messages.error(request, "Merci de corriger les erreurs dans le formulaire.")
+            return render(
+                request,
+                self.template_name,
+                {
+                    "famille_form": famille_form,
+                    "parent_formset": parent_formset,
+                    "enfant_formset": enfant_formset,
+                },
+            )
+
+        # Détection changements
         def formset_any_change(fs):
             if any(f.has_changed() for f in fs.forms):
                 return True
@@ -417,8 +443,7 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
 
         parents_group = _get_group("parents")
 
-        # 2 passes : d'abord créations/updates, puis suppressions (plus lisible)
-        # --- Pass 1: create/update
+        # Pass 1: create/update
         for form in parent_formset:
             cd = getattr(form, "cleaned_data", {}) or {}
             if not cd or cd.get("DELETE"):
@@ -450,10 +475,20 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                     defaults={"famille": famille, "role": "parent"},
                 )
             else:
-                # création
-                password = new_pwd or User.objects.make_random_password()
+                # création : mot de passe OBLIGATOIRE (validé plus haut)
+                if not new_pwd:
+                    messages.error(request, "Mot de passe requis pour un nouveau parent.")
+                    return render(
+                        request,
+                        self.template_name,
+                        {
+                            "famille_form": famille_form,
+                            "parent_formset": parent_formset,
+                            "enfant_formset": enfant_formset,
+                        },
+                    )
                 new_user = User.objects.create_user(
-                    username=email, email=email, password=password,
+                    username=email, email=email, password=new_pwd,
                     first_name=first, last_name=last,
                 )
                 new_user.groups.add(parents_group)
@@ -461,7 +496,7 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                     user=new_user, famille=famille, role="parent"
                 )
 
-        # --- Pass 2: deletes (sécurisé par la validation ci-dessus)
+        # Pass 2: deletes (sécurisé par la validation ci-dessus)
         for form in parent_formset:
             cd = getattr(form, "cleaned_data", {}) or {}
             if not cd or not cd.get("DELETE"):
@@ -471,14 +506,14 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
                 user = get_object_or_404(User, pk=user_id)
                 user.delete()
 
-        # Enfants (inchangé)
+        # Enfants
         for form in enfant_formset.forms:
             cd = getattr(form, "cleaned_data", {}) or {}
             if not cd:
                 continue
             if cd.get("DELETE"):
                 inst = form.instance
-                if inst.pk and inst.user:
+                if inst.pk and getattr(inst, "user", None):
                     inst.user.delete()
                 if inst.pk:
                     inst.delete()
@@ -491,31 +526,8 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
         messages.success(request, "Compte famille mis à jour.")
         return redirect("points:dashboard")
 
-    # ---------- Suppression de la famille ----------
-    def _delete_family(self, request, famille):
-        # Supprimer d'abord les enfants (et leur User lié)
-        for enfant in famille.enfants.all():
-            if getattr(enfant, "user", None):
-                enfant.user.delete()
-            enfant.delete()
-
-        # Supprimer tous les parents (Users) de la famille
-        for parent in self._parents_queryset(famille):
-            parent.delete()
-
-        # Enfin, supprimer l'objet Famille
-        famille.delete()
-
-        # Déconnecter l'utilisateur courant (la session ne pointe plus sur un user existant)
-        from django.contrib.auth import logout
-        logout(request)
-
-        messages.success(request, "Tous les comptes de votre famille ont été supprimés.")
-        return redirect("points:dashboard")  # redirigera vers login si dashboard nécessite l’auth
-
 
 family_manage_view = ManageFamilyAccountView.as_view()
-
 
 # ===================================================================
 # ==================   SUPPRESSION TOTALE   =========================
