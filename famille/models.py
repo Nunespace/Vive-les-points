@@ -27,7 +27,7 @@ class UserProfile(models.Model):
 class Enfant(models.Model):
     prenom = models.CharField(max_length=200)
     solde_points = models.IntegerField(default=0)
-    famille = models.ForeignKey(Famille, on_delete=models.CASCADE)
+    famille = models.ForeignKey(Famille, on_delete=models.CASCADE, related_name="enfants")
     user = models.OneToOneField(  # <-- NOUVEAU
         settings.AUTH_USER_MODEL,
         null=True,

@@ -59,10 +59,9 @@ body::before {
   text-shadow: 0 2px 6px rgba(0,0,0,.35);
 }
 
-/* Stack des messages, espace pour ne pas se coller au header */
-/* Fond rouge clair derrière la pile d’alertes */
+/* Stack des messages */
 
-/* Par défaut : aucun cadre */
+/* Wrapper neutre par défaut */
 .alerts-stack{
   padding-top: 0;
   background: transparent;
@@ -71,47 +70,41 @@ body::before {
   border-radius: 0;
 }
 
-/* Fond seulement pour erreurs/avertissements */
-.alerts-stack:has(.alert-danger),
+/* ⚠️ Fond discret du wrapper UNIQUEMENT quand il y a un warning */
 .alerts-stack:has(.alert-warning){
   padding-top: .5rem;
-  background-color: orange;
-  border-bottom: 1px solid rgba(220,53,69,.25);
-  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  background-color: var(--bs-warning-bg-subtle);
+  border-bottom: 1px solid var(--bs-warning-border-subtle);
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
   border-radius: .25rem;
 }
 
-/* Succès / info : pas de fond (ou très léger si tu veux) */
+/* ✅ Success / Info / Primary / Secondary / Danger :
+   wrapper neutre → une seule alerte visible */
 .alerts-stack:has(.alert-success),
 .alerts-stack:has(.alert-info),
 .alerts-stack:has(.alert-primary),
-.alerts-stack:has(.alert-secondary){
-  padding-top: .5rem;               /* garder l’espacement si tu aimes */
-  background-color: rgba(25,135,84,.08); /* vert Bootstrap */         /* pas de bande orange */
+.alerts-stack:has(.alert-secondary),
+.alerts-stack:has(.alert-danger){
+  padding-top: .5rem;     /* petit espace haut si tu veux */
+  background: transparent;
   border: 0;
   box-shadow: none;
   border-radius: 0;
 }
 
-
-
-/* Meilleure lisibilité des erreurs longues */
+/* Lisibilité des messages longs dans l’alerte */
 .alert ul { margin-bottom: 0; }
 .alert { font-size: 1rem; }
 
-/* erreurs sous les champs */
+/* Erreurs sous les champs (Django errorlist) */
 .errorlist {
-  color: #dc3545;       /* rouge Bootstrap */
-  margin: .25rem 0 0;   /* petit espace au-dessus */
-  list-style: none;     /* on enlève les puces */
+  color: #dc3545;          /* rouge Bootstrap */
+  margin: .25rem 0 0;
+  list-style: none;
   padding-left: 0;
-  font-size: .875rem;   /* un peu plus petit que le texte normal */
+  font-size: .875rem;
 }
-
-/* si tu veux que ce soit bien cohérent avec Bootstrap */
 .errorlist li::before {
-  content: "⚠ ";        /* ou rien si tu veux juste du texte */
+  content: "⚠ ";
 }
-
-
-

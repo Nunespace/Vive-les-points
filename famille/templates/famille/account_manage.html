@@ -37,6 +37,12 @@
       </div>
       <div class="card-body" id="parents-container">
         {{ parent_formset.management_form }}
+        {% if parent_formset.non_form_errors %}
+        <div class="alert alert-warning mb-3">
+          {% for err in parent_formset.non_form_errors %}<div>{{ err }}</div>{% endfor %}
+        </div>
+      {% endif %}
+
         {% for form in parent_formset %}
           <div class="border rounded p-3 mb-3 parent-form">
             {{ form.user_id }}
@@ -116,11 +122,13 @@
     </div>
   </form>
 
-  <form method="post" class="mt-4" onsubmit="return confirm('Supprimer votre compte parent ? Cette action est irréversible.');">
+  <form method="post" class="mt-4"
+        onsubmit="return confirm('Supprimer TOUS les comptes de votre famille (parents + enfants) ? Cette action est irréversible.');">
     {% csrf_token %}
-    <input type="hidden" name="delete_self" value="1">
-    <button class="btn btn-outline-danger">Supprimer mon compte parent</button>
+    <input type="hidden" name="delete_family" value="1">
+    <button class="btn btn-outline-danger">Supprimer tous les comptes de ma famille</button>
   </form>
+
 </div>
 
 <script>

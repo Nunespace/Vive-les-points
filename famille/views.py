@@ -143,9 +143,9 @@ class RegisterFamilyView(View):
                 messages.error(
                     request,
                     format_html(
-                        'Certains champs sont invalides :<ul class="mb-0">{}</ul>',
+                        "Merci de corriger les erreurs dans le formulaire :<br>{}",
                         format_html_join(
-                            "", "<li>{}</li>", ((e,) for e in error_messages)
+                            "", "<div>• {}</div>", ((msg,) for msg in error_messages)
                         ),
                     ),
                 )
@@ -320,17 +320,13 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
 
         famille = request.user.profile.famille
 
-        logger.warning(
-            f"[ACCOUNT][POST] start: auth={request.user.is_authenticated} "
-            f"session_key={getattr(request.session, 'session_key', None)}"
-        )
-
-        if "delete_self" in request.POST:
-            return self._delete_self_parent(request, famille)
+        # suppression globale de la famille (nouveau)
+        if "delete_family" in request.POST:
+            return self._delete_family(request, famille)
 
         famille_form = FamilleForm(request.POST, instance=famille)
 
-        # >>> reconstruire le même "initial" que dans GET <<<
+        # reconstruire l'initial comme en GET
         parents = self._parents_queryset(famille)
         parent_initial = [
             {
@@ -342,11 +338,8 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             }
             for u in parents
         ]
-
         parent_formset = ParentInlineFormSet(
-            request.POST,
-            prefix="parents",
-            initial=parent_initial,   # <<< clé du problème
+            request.POST, prefix="parents", initial=parent_initial
         )
         enfant_formset = EnfantInlineFormSet(
             request.POST, instance=famille, prefix="enfants"
@@ -356,14 +349,38 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             form.famille = famille
 
         if not (famille_form.is_valid() and parent_formset.is_valid() and enfant_formset.is_valid()):
-            logger.warning(
-                f"[ACCOUNT][POST] invalid form(s): auth={request.user.is_authenticated} "
-                f"session_key={getattr(request.session, 'session_key', None)}"
-            )
             messages.error(request, "Merci de corriger les erreurs dans le formulaire.")
             return render(
-                request,
-                self.template_name,
+                request, self.template_name,
+                {
+                    "famille_form": famille_form,
+                    "parent_formset": parent_formset,
+                    "enfant_formset": enfant_formset,
+                },
+            )
+
+        # >>> Empêcher de finir à 0 parent via le formset
+        existing_count = parents.count()
+
+        # parent_formset.cleaned_data est une liste de dicts (un par formulaire)
+        post_deletes = 0
+        post_adds = 0
+        for cd in parent_formset.cleaned_data:
+            if not cd:
+                continue
+            # suppression d'un parent existant ?
+            if cd.get("user_id") and cd.get("DELETE"):
+                post_deletes += 1
+            # ajout d'un nouveau parent (form extra non vide, non supprimé)
+            if not cd.get("user_id") and not cd.get("DELETE"):
+                if any(cd.get(f) for f in ("first_name", "last_name", "email", "new_password")):
+                    post_adds += 1
+
+        remaining = existing_count - post_deletes + post_adds
+        if remaining < 1:
+            parent_formset.add_error(None, "Impossible de supprimer le dernier parent. Ajoutez d'abord un autre parent.")
+            return render(
+                request, self.template_name,
                 {
                     "famille_form": famille_form,
                     "parent_formset": parent_formset,
@@ -399,79 +416,67 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             famille_form.save()
 
         parents_group = _get_group("parents")
-        existing_parent_ids = set(
-            self._parents_queryset(famille).values_list("id", flat=True)
-        )
 
-        # Parents
+        # 2 passes : d'abord créations/updates, puis suppressions (plus lisible)
+        # --- Pass 1: create/update
         for form in parent_formset:
-            if not form.cleaned_data:
+            cd = getattr(form, "cleaned_data", {}) or {}
+            if not cd or cd.get("DELETE"):
                 continue
 
-            del_flag = form.cleaned_data.get("DELETE")
-            user_id = form.cleaned_data.get("user_id")
-            first = form.cleaned_data.get("first_name")
-            last = form.cleaned_data.get("last_name")
-            email = form.cleaned_data.get("email")
-            new_pwd = form.cleaned_data.get("new_password")
+            user_id = cd.get("user_id")
+            first = cd.get("first_name")
+            last = cd.get("last_name")
+            email = cd.get("email")
+            new_pwd = cd.get("new_password")
 
             if user_id:
                 user = get_object_or_404(User, pk=user_id)
-                if del_flag:
-                    if existing_parent_ids - {user.id}:
-                        user.delete()
-                        existing_parent_ids.discard(user.id)
-                    else:
-                        messages.error(
-                            request,
-                            "Impossible de supprimer le dernier parent.",
-                        )
-                        raise transaction.TransactionManagementError(
-                            "last-parent-guard"
-                        )
-                else:
-                    user.first_name = first
-                    user.last_name = last
-                    user.email = email
-                    user.username = email
-
-                    password_changed_for_current = False
-                    if new_pwd:
-                        user.set_password(new_pwd)
-                        if user.pk == request.user.pk:
-                            password_changed_for_current = True
-
-                    user.save()
-
-                    if password_changed_for_current:
-                        update_session_auth_hash(request, user)
-
-                    user.groups.add(parents_group)
-                    UserProfile.objects.get_or_create(
-                        user=user,
-                        defaults={"famille": famille, "role": "parent"},
-                    )
+                user.first_name = first
+                user.last_name = last
+                user.email = email
+                user.username = email
+                password_changed_for_current = False
+                if new_pwd:
+                    user.set_password(new_pwd)
+                    if user.pk == request.user.pk:
+                        password_changed_for_current = True
+                user.save()
+                if password_changed_for_current:
+                    update_session_auth_hash(request, user)
+                user.groups.add(parents_group)
+                UserProfile.objects.get_or_create(
+                    user=user,
+                    defaults={"famille": famille, "role": "parent"},
+                )
             else:
-                if del_flag:
-                    continue
+                # création
                 password = new_pwd or User.objects.make_random_password()
                 new_user = User.objects.create_user(
-                    username=email,
-                    email=email,
-                    password=password,
-                    first_name=first,
-                    last_name=last,
+                    username=email, email=email, password=password,
+                    first_name=first, last_name=last,
                 )
                 new_user.groups.add(parents_group)
                 UserProfile.objects.create(
                     user=new_user, famille=famille, role="parent"
                 )
 
-        # Enfants
-        for form in enfant_formset.forms:
-            if not form.cleaned_data:
+        # --- Pass 2: deletes (sécurisé par la validation ci-dessus)
+        for form in parent_formset:
+            cd = getattr(form, "cleaned_data", {}) or {}
+            if not cd or not cd.get("DELETE"):
                 continue
-            if form.cleaned_data.get("DELETE"):
+            user_id = cd.get("user_id")
+            if user_id:
+                user = get_object_or_404(User, pk=user_id)
+                user.delete()
+
+        # Enfants (inchangé)
+        for form in enfant_formset.forms:
+            cd = getattr(form, "cleaned_data", {}) or {}
+            if not cd:
+                continue
+            if cd.get("DELETE"):
                 inst = form.instance
                 if inst.pk and inst.user:
                     inst.user.delete()
@@ -483,27 +488,30 @@ class ManageFamilyAccountView(LoginRequiredMixin, View):
             inst.save()
             form.save_user(famille)
 
-        logger.warning(
-            f"[ACCOUNT][POST] end: auth={request.user.is_authenticated} "
-            f"session_key={getattr(request.session, 'session_key', None)}"
-        )
-
         messages.success(request, "Compte famille mis à jour.")
         return redirect("points:dashboard")
 
-    # ---------- Suppression de MON compte parent ----------
-    def _delete_self_parent(self, request, famille):
-        me = request.user
-        other_parents = self._parents_queryset(famille).exclude(pk=me.pk)
-        if not other_parents.exists():
-            messages.error(
-                request,
-                "Impossible de supprimer votre compte : vous êtes le dernier parent.",
-            )
-            return redirect("famille:manage_account")
-        me.delete()
-        messages.success(request, "Votre compte parent a été supprimé.")
-        return redirect("points:dashboard")
+    # ---------- Suppression de la famille ----------
+    def _delete_family(self, request, famille):
+        # Supprimer d'abord les enfants (et leur User lié)
+        for enfant in famille.enfants.all():
+            if getattr(enfant, "user", None):
+                enfant.user.delete()
+            enfant.delete()
+
+        # Supprimer tous les parents (Users) de la famille
+        for parent in self._parents_queryset(famille):
+            parent.delete()
+
+        # Enfin, supprimer l'objet Famille
+        famille.delete()
+
+        # Déconnecter l'utilisateur courant (la session ne pointe plus sur un user existant)
+        from django.contrib.auth import logout
+        logout(request)
+
+        messages.success(request, "Tous les comptes de votre famille ont été supprimés.")
+        return redirect("points:dashboard")  # redirigera vers login si dashboard nécessite l’auth
 
 
 family_manage_view = ManageFamilyAccountView.as_view()

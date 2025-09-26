@@ -1,6 +1,7 @@
 # config/settings/base.py
 import os
 import locale
+from django.contrib.messages import constants as message_constants
 from pathlib import Path
 from . import BASE_DIR
 from . import env
@@ -245,6 +246,16 @@ IGNORABLE_404_URLS = [
 
 
 env.read_env(BASE_DIR / ".env")
+
+# Messages
+MESSAGE_TAGS = {
+    message_constants.DEBUG:   "secondary",
+    message_constants.INFO:    "info",
+    message_constants.SUCCESS: "success",
+    message_constants.WARNING: "warning",
+    message_constants.ERROR:   "danger",   # 👈 le point clé
+}
+
 
 DJANGO_LOG_LEVEL = env("DJANGO_LOG_LEVEL", default="INFO")
 

@@ -44,7 +44,7 @@
       <div class="alerts-stack position-sticky top-0 start-0 end-0" style="z-index:1080;">
         <div class="container pt-2">
           {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mb-3" role="alert">
+            <div class="alert alert-{{ message.level_tag }} alert-dismissible fade show shadow-sm mb-3" role="alert">
               {{ message|safe }}
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
             </div>
