@@ -96,9 +96,21 @@
                   <i class="bi bi-eye"></i>
                 </button>
               </div>
-              <div class="form-text">Laisser vide pour conserver le mot de passe actuel.</div>
+
+              {# ▼▼▼ message contextuel + classe hook ▼▼▼ #}
+              {% if form.instance.pk %}
+                <div class="form-text js-enfant-pwd-help">
+                  Laisser vide pour conserver le mot de passe actuel.
+                </div>
+              {% else %}
+                <div class="form-text js-enfant-pwd-help">
+                  Choisir un mot de passe si vous renseignez l'email de l'enfant.
+                </div>
+              {% endif %}
+
               <div class="text-danger small">{{ form.new_password.errors }}</div>
             </div>
+
           </div>
           <div class="form-check mt-2">
             {{ form.DELETE }} <label class="form-check-label">Retirer de la famille</label>
@@ -139,6 +151,39 @@
     });
   }
 
+  // --- Config UI pour un bloc "enfant" (existant vs nouveau) -----------------
+function configureEnfantBlock(block) {
+  const idInput = block.querySelector('input[name$="-id"]');              // id de l'objet Enfant
+  const email   = block.querySelector('input[name$="-email"]');
+  const pwd     = block.querySelector('input[name$="-new_password"]');
+  const help    = block.querySelector('.js-enfant-pwd-help');
+  const isExisting = !!(idInput && idInput.value);
+
+  if (!pwd) return;
+
+  if (isExisting) {
+    // Enfant existant
+    pwd.required = false;
+    pwd.placeholder = "Laisser vide pour conserver";
+    if (help) help.textContent = "Laisser vide pour conserver le mot de passe actuel.";
+    if (email) {
+      // Sur un existant, le mdp reste facultatif même si on change l'email
+      email.addEventListener('input', () => { pwd.required = false; });
+    }
+  } else {
+    // Nouvel enfant : mdp seulement si un email est saisi
+    pwd.required = !!(email && email.value.trim() !== "");
+    pwd.placeholder = ""; // pas de texte "laisser vide"
+    if (help) help.textContent = "Choisir un mot de passe si vous renseignez l'email de l'enfant.";
+    if (email) {
+      email.addEventListener('input', () => {
+        pwd.required = email.value.trim() !== "";
+      });
+    }
+  }
+}
+
+
   // --- Config UI pour un bloc "parent" (existant vs nouveau) ---------------
   function configureParentBlock(block) {
     const userId = block.querySelector('input[name$="-user_id"]');
@@ -177,6 +222,7 @@
 
   // --- Config initiale des blocs existants ---------------------------------
   document.querySelectorAll('#parents-container .parent-form').forEach(configureParentBlock);
+  document.querySelectorAll('#enfants-container .enfant-form').forEach(configureEnfantBlock);
 
   // --- Ajout d'un PARENT ----------------------------------------------------
   document.getElementById('add-parent').addEventListener('click', () => {
@@ -213,9 +259,16 @@
     resetInputs(clone);
     renameFormsetBlock(clone, 'enfants', index);
 
+    // Important : un nouveau bloc enfant n'a PAS d'id => c'est un "nouveau"
+    const idInput = clone.querySelector('input[name$="-id"]');
+    if (idInput) idInput.value = "";
+
     container.appendChild(clone);
     totalInput.value = index + 1;
+
+    configureEnfantBlock(clone);
   });
+
 </script>
 
 {% endblock %}

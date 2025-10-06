@@ -32,11 +32,14 @@
   <header>
     <div class="container">
       <a class="text-center" href="{% url 'points:dashboard' %}">
+        
         <h1 class="p-1 text-light"
             style="font-family: 'Bungee Spice', sans-serif;"
+            {% if user.is_authenticated %}
             data-bs-toggle="tooltip"
             data-bs-placement="bottom"
-            title="Tableau de bord">
+            title="Tableau de bord"
+            {% endif %}>
           Vive les Points!
         </h1>
       </a>
@@ -94,7 +97,8 @@
              class="text-dark text-decoration-underline"
              data-bs-toggle="tooltip"
              data-bs-placement="top"
-             title="Contact">
+             title="Une idée d'amélioration? Un bug à signaler? C'est par ici!"
+             aria-label="Contacter Nunespace">
             Nunespace
           </a>
         </p>
@@ -132,6 +136,7 @@
             Nunespace
           </a>
         </p>
+        {% if user.is_authenticated %}
         <a href="https://paypal.me/nunespace17"
            class="btn btn-primary btn-sm"
            target="_blank" rel="noopener"
@@ -141,6 +146,7 @@
            aria-label="Faire un don pour soutenir le projet">
           Soutenez le projet
         </a>
+        {% endif %}
       </div>
     </div>
     {% endif %}

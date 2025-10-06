@@ -257,7 +257,7 @@ class EnfantManageForm(forms.ModelForm):
             attrs={
                 "class": "form-control",
                 "autocomplete": "new-password",
-                "placeholder": "Laisser vide pour conserver",
+                #"placeholder": "Laisser vide pour conserver",
             },
         ),
     )
@@ -276,25 +276,25 @@ class EnfantManageForm(forms.ModelForm):
             self.fields["email"].initial = self.instance.user.email
 
     def clean(self):
-        data = super().clean()
-        email = data.get("email") or ""
-        pwd = data.get("new_password")
+        cleaned = super().clean()
+        email = (cleaned.get("email") or "").strip()
+        pwd = cleaned.get("new_password") or ""
 
         if email:
-            # Vérifier l'unicité email côté User (hors l'user déjà lié)
+            # Unicité email côté User (hors user déjà lié)
             qs = User.objects.filter(email__iexact=email)
-            if self.instance and self.instance.user:
+            if self.instance and getattr(self.instance, "user", None):
                 qs = qs.exclude(pk=self.instance.user.pk)
             if qs.exists():
-                raise ValidationError(
-                    "Un compte utilisateur existe déjà avec cet email."
-                )
-            # Exiger un mot de passe s'il n'y a pas encore d'user lié
-            if not self.instance.user and not pwd:
-                raise ValidationError(
-                    "Mot de passe requis si un email enfant est saisi."
-                )
-        return data
+                # >>> attacher l'erreur au champ email
+                self.add_error("email", "Un compte utilisateur existe déjà avec cet email.")
+
+            # Exiger un mot de passe si NOUVEL enfant (pas d'user lié)
+            if not getattr(self.instance, "user", None) and not pwd:
+                # >>> attacher l'erreur au champ new_password
+                self.add_error("new_password", "Mot de passe requis si vous renseignez l'email.")
+
+        return cleaned
 
     def save_user(self, famille):
         """

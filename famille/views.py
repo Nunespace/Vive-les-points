@@ -112,44 +112,69 @@ class RegisterFamilyView(View):
             and parent_formset.is_valid()
             and enfant_formset.is_valid()
         ):
-            # --- agrégateur d’erreurs (ajoute les non_form_errors) ---
+            from django.forms.forms import NON_FIELD_ERRORS
             from django.utils.html import format_html, format_html_join
 
+            # --- agrégateur d’erreurs (sans doublons) ---
             error_messages = []
+            seen = set()  # pour dédupliquer au cas où
 
-            # erreurs du form Famille
+            def add_msg(msg):
+                if msg not in seen:
+                    seen.add(msg)
+                    error_messages.append(msg)
+
+            # 1) Famille
             for field, errors in famille_form.errors.items():
-                for err in errors:
-                    error_messages.append(f"Famille – {field} : {err}")
+                # label lisible
+                label = getattr(famille_form.fields.get(field), "label", field)
+                if field == NON_FIELD_ERRORS:
+                    for err in famille_form.non_field_errors():
+                        add_msg(f"Famille – {err}")
+                else:
+                    for err in errors:
+                        add_msg(f"Famille – {label} : {err}")
 
-            # erreurs des formsets Parents / Enfants
+            # 2) Formset Parents (non-form errors)
             for err in parent_formset.non_form_errors():
-                error_messages.append(f"Parents – {err}")
-            for err in enfant_formset.non_form_errors():
-                error_messages.append(f"Enfants – {err}")
+                add_msg(f"Parents – {err}")
 
+            # 3) Chaque parent
             for i, form in enumerate(parent_formset.forms, start=1):
                 for field, errors in form.errors.items():
-                    for err in errors:
-                        error_messages.append(f"Parent {i} – {field} : {err}")
+                    if field == NON_FIELD_ERRORS:
+                        # ne PAS repasser par form.errors['__all__'] pour éviter le doublon
+                        for err in form.non_field_errors():
+                            add_msg(f"Parent {i} – {err}")
+                    else:
+                        label = getattr(form.fields.get(field), "label", field)
+                        for err in errors:
+                            add_msg(f"Parent {i} – {label} : {err}")
 
+            # 4) Formset Enfants (non-form errors)
+            for err in enfant_formset.non_form_errors():
+                add_msg(f"Enfants – {err}")
+
+            # 5) Chaque enfant
             for i, form in enumerate(enfant_formset.forms, start=1):
                 for field, errors in form.errors.items():
-                    for err in errors:
-                        error_messages.append(f"Enfant {i} – {field} : {err}")
-                for err in form.non_field_errors():
-                    error_messages.append(f"Enfant {i} – {err}")
+                    if field == NON_FIELD_ERRORS:
+                        for err in form.non_field_errors():
+                            add_msg(f"Enfant {i} – {err}")
+                    else:
+                        label = getattr(form.fields.get(field), "label", field)
+                        for err in errors:
+                            add_msg(f"Enfant {i} – {label} : {err}")
 
             if error_messages:
                 messages.error(
                     request,
                     format_html(
                         "Merci de corriger les erreurs dans le formulaire :<br>{}",
-                        format_html_join(
-                            "", "<div>• {}</div>", ((msg,) for msg in error_messages)
-                        ),
+                        format_html_join("", "<div>• {}</div>", ((m,) for m in error_messages)),
                     ),
                 )
+
 
             return render(
                 request,
