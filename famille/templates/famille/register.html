@@ -7,6 +7,12 @@
     <span class="title-chip">Créer un compte famille</span>
   </h1>
 
+  <p class="text-center bg-light p-3 rounded shadow-sm">
+  En créant un compte, vous acceptez que vos données soient utilisées 
+  uniquement pour le bon fonctionnement de l’application, conformément à notre 
+  <a href="{% url 'confidentialite' %}" target="_blank" rel="noopener">Politique de confidentialité</a>.
+  </p>
+
   <form method="post" novalidate>
     {% csrf_token %}
 

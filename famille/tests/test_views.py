@@ -3,7 +3,6 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.db import transaction
-
 from famille.models import Famille, Enfant, UserProfile
 
 User = get_user_model()
@@ -23,6 +22,29 @@ def mgmt(prefix, total, initial=0, can_delete=True):
         # pas obligatoire, mais explicite
         data[f"{prefix}-0-DELETE"] = ""
     return data
+
+
+# ------------------------------------------------------------------
+# confidentialite_view
+# ------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_confidentialite_view(client):
+    """
+    Vérifie que la page Politique de confidentialité s'affiche correctement.
+    """
+    url = reverse("confidentialite")
+    response = client.get(url)
+
+    # 1. La vue renvoie un code 200
+    assert response.status_code == 200
+
+    # 2. Le bon template est utilisé
+    assert "famille/confidentialite.html" in [t.name for t in response.templates]
+
+    # 3. Le contenu contient le titre de la page (encodé en UTF-8)
+    assert "Politique de confidentialité".encode("utf-8") in response.content
 
 
 # ------------------------------------------------------------------

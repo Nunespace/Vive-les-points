@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Politique de confidentialité | Vive les Points{% endblock title %}
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-sm mx-auto" style="max-width: 800px;">
+    <div class="card-body">
+      <h1 class="mb-3 text-center">Politique de confidentialité</h1>
+      <p class="text-muted text-center mb-4">Dernière mise à jour : octobre 2025</p>
+
+      <h2 class="h5 mt-4">1. Responsable du traitement</h2>
+      <p>
+        Mathieu Cazenave — Éditeur de <strong>Vive les Points</strong><br>
+        Contact : <a href="mailto:mathieu@vive-les-points.fr">mathieu@vive-les-points.fr</a>
+      </p>
+
+      <h2 class="h5 mt-4">2. Données collectées</h2>
+      <ul>
+        <li>Noms et prénoms des parents</li>
+        <li>Adresse e-mail des parents et des enfants</li>
+        <li>Prénoms des enfants</li>
+        <li>Points attribués dans l’application et leurs motifs</li>
+        <li>Barêmes des récompenses et des points</li>
+      </ul>
+
+      <h2 class="h5 mt-4">3. Finalités</h2>
+      <p>Gestion des comptes famille/parent/enfant, fonctionnement de l’application et connexion sécurisée.</p>
+
+      <h2 class="h5 mt-4">4. Base légale</h2>
+      <p>Exécution du contrat (utilisation volontaire du service).</p>
+
+      <h2 class="h5 mt-4">5. Durée de conservation</h2>
+      <p>Conservation tant que le compte est actif. Suppression intégrale des données à la fermeture du compte.</p>
+
+      <h2 class="h5 mt-4">6. Hébergement & partage</h2>
+      <p>Données hébergées en France (o2switch). Aucun partage ni revente à des tiers.</p>
+
+      <h2 class="h5 mt-4">7. Sécurité</h2>
+      <ul>
+        <li>HTTPS</li>
+        <li>Mots de passe hachés par Django</li>
+        <li>Accès restreint à la base</li>
+      </ul>
+
+      <h2 class="h5 mt-4">8. Vos droits</h2>
+      <p>
+        Accès, rectification, effacement, limitation, opposition — par e-mail :
+        <a href="mailto:mathieu@vive-les-points.fr">mathieu@vive-les-points.fr</a>.
+      </p>
+
+      <h2 class="h5 mt-4">9. Cookies</h2>
+      <p>Uniquement des cookies techniques de session. Aucun cookie publicitaire ni analytique.</p>
+
+      <h2 class="h5 mt-4">10. Modifications</h2>
+      <p>Cette politique peut évoluer. La version à jour est publiée sur cette page.</p>
+    </div>
+  </div>
+</div>
+{% endblock content %}

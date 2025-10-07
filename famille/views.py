@@ -39,10 +39,14 @@ def _get_group(name: str) -> Group:
     g, _ = Group.objects.get_or_create(name=name)
     return g
 
-# View de la page d'accueil
 
+# View de la page d'accueil
 def landing_view(request):
     return render(request, "famille/landing.html")
+
+
+def confidentialite_view(request):
+    return render(request, "famille/confidentialite.html")
 
 # ===================================================================
 # ======================   AUTH (email)   ============================

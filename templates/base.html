@@ -90,30 +90,31 @@
       </div>
 
       <!-- Col droite : copyright + don -->
-      <div class="col-12 col-md-4 d-flex justify-content-end align-items-center gap-2">
-        <p class="text-dark m-0">
-          © 2025 - 
+      <div class="col-12 col-md-4 d-flex justify-content-end align-items-center gap-2 flex-wrap flex-md-nowrap">
+        <!-- Groupe texte (peut passer à la ligne en XS) -->
+        <div class="d-inline-flex align-items-center gap-2 mb-2 mb-md-0 small text-truncate" style="min-width:0;">
+          <span class="text-dark">© 2025 -</span>
           <a href="mailto:nunespace@gmail.com"
-             class="text-dark text-decoration-underline"
-             data-bs-toggle="tooltip"
-             data-bs-placement="top"
-             title="Une idée d'amélioration? Un bug à signaler? C'est par ici!"
-             aria-label="Contacter Nunespace">
-            Nunespace
+            class="text-dark text-decoration-underline"
+            data-bs-toggle="tooltip" data-bs-placement="top"
+            title="Une idée d'amélioration? Un bug à signaler? C'est par ici!"
+            aria-label="Contacter Nunespace">Nunespace</a>
+          <span class="d-none d-md-inline">•</span>
+          <a href="{% url 'confidentialite' %}" class="text-dark text-decoration-underline">
+            Politique de confidentialité
           </a>
-        </p>
+        </div>
+
+        <!-- Bouton (passe dessous en XS si manque de place) -->
         <a href="https://paypal.me/nunespace17"
-           class="btn btn-primary btn-sm"
-           target="_blank" rel="noopener"
-           data-bs-toggle="tooltip"
-           data-bs-placement="top"
-           title="Application gratuite pour les familles – Soutenez le projet"
-           aria-label="Faire un don pour soutenir le projet">
+          class="btn btn-primary btn-sm"
+          target="_blank" rel="noopener"
+          data-bs-toggle="tooltip" data-bs-placement="top"
+          title="Application gratuite pour les familles – Soutenez le projet"
+          aria-label="Faire un don pour soutenir le projet">
           Soutenez le projet
         </a>
       </div>
-      
-    </div>
 
     {% else %}
     <!-- Version NON CONNECTÉ : 2 colonnes (remplit l'espace) -->
@@ -136,18 +137,9 @@
             Nunespace
           </a>
         </p>
-        {% if user.is_authenticated %}
-        <a href="https://paypal.me/nunespace17"
-           class="btn btn-primary btn-sm"
-           target="_blank" rel="noopener"
-           data-bs-toggle="tooltip"
-           data-bs-placement="top"
-           title="Application gratuite pour les familles – Soutenez le projet"
-           aria-label="Faire un don pour soutenir le projet">
-          Soutenez le projet
-        </a>
-        {% endif %}
+        <a href="{% url 'confidentialite' %}" class="text-dark text-decoration-underline">Politique de confidentialité</a>
       </div>
+
     </div>
     {% endif %}
   </div>
