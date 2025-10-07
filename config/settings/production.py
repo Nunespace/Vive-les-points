@@ -150,4 +150,3 @@ if SENTRY_DSN:
         before_send=_sentry_before_send,
     )
 
-MAINTENANCE_MODE = True
