@@ -322,47 +322,34 @@ def test_manage_post_add_new_parent(
     assert up.role == "parent"
     assert up.famille == famille
 
-
 @pytest.mark.django_db
-def test_manage_post_delete_last_parent_guard_raises(
-    client, userprofile_parent, parent_user, famille
-):
-    """
-    On tente de supprimer le dernier parent via le formset => la vue lève TransactionManagementError.
-    """
+def test_manage_post_delete_last_parent_shows_error(client, userprofile_parent, parent_user, famille):
     client.force_login(parent_user)
-
     parents_prefix = "parents"
     enfants_prefix = "enfants"
-
     data = {
         "nom": famille.nom,
-        **{
-            f"{parents_prefix}-TOTAL_FORMS": "1",
-            f"{parents_prefix}-INITIAL_FORMS": "1",
-            f"{parents_prefix}-MIN_NUM_FORMS": "0",
-            f"{parents_prefix}-MAX_NUM_FORMS": "1000",
-        },
+        f"{parents_prefix}-TOTAL_FORMS": "1",
+        f"{parents_prefix}-INITIAL_FORMS": "1",
+        f"{parents_prefix}-MIN_NUM_FORMS": "0",
+        f"{parents_prefix}-MAX_NUM_FORMS": "1000",
         f"{parents_prefix}-0-user_id": str(parent_user.id),
         f"{parents_prefix}-0-first_name": parent_user.first_name,
         f"{parents_prefix}-0-last_name": parent_user.last_name,
         f"{parents_prefix}-0-email": parent_user.email,
         f"{parents_prefix}-0-new_password": "",
-        f"{parents_prefix}-0-DELETE": "on",  # on demande suppression du dernier parent
-        **{
-            f"{enfants_prefix}-TOTAL_FORMS": "0",
-            f"{enfants_prefix}-INITIAL_FORMS": "0",
-            f"{enfants_prefix}-MIN_NUM_FORMS": "0",
-            f"{enfants_prefix}-MAX_NUM_FORMS": "1000",
-        },
+        f"{parents_prefix}-0-DELETE": "on",
+        f"{enfants_prefix}-TOTAL_FORMS": "0",
+        f"{enfants_prefix}-INITIAL_FORMS": "0",
+        f"{enfants_prefix}-MIN_NUM_FORMS": "0",
+        f"{enfants_prefix}-MAX_NUM_FORMS": "1000",
     }
-
-    with pytest.raises(transaction.TransactionManagementError):
-        client.post(reverse("famille:manage_account"), data)
+    resp = client.post(reverse("famille:manage_account"), data)
+    assert resp.status_code == 200
+    assert b"Impossible de supprimer le dernier parent" in resp.content
 
 
 # --- ManageFamilyAccountView : ajout d’un enfant ---
-
 
 @pytest.mark.django_db
 def test_manage_post_add_enfant_and_user(
@@ -411,22 +398,65 @@ def test_manage_post_add_enfant_and_user(
     assert up.famille == famille
 
 
+
 @pytest.mark.django_db
 def test_manage_delete_self_parent_with_other_parent_exists(
     client, userprofile_parent, parent_user, autre_parent_user, famille
 ):
-    # ajouter un autre parent
-    UserProfile.objects.create(
-        user=autre_parent_user, famille=famille, role="parent"
-    )
+    # créer l'autre parent dans la même famille
+    from famille.models import UserProfile
+    UserProfile.objects.create(user=autre_parent_user, famille=famille, role="parent")
+
+    # La vue ordonne les parents par id
+    ordered = sorted([parent_user, autre_parent_user], key=lambda u: u.id)
+    idx_self = ordered.index(parent_user)
+    idx_other = 1 - idx_self
 
     client.force_login(parent_user)
-    resp = client.post(reverse("famille:manage_account"), {"delete_self": "1"})
-    assert resp.status_code in (302, 301)
-    assert reverse("points:dashboard") in resp.url
 
-    # le user courant est supprimé
-    assert not User.objects.filter(pk=parent_user.pk).exists()
+    # Construire le POST conforme aux 3 formulaires attendus :
+    # - FamilleForm (champ "nom")
+    # - ParentInlineFormSet (prefix "parents")
+    # - EnfantInlineFormSet (prefix "enfants")
+    data = {
+        # ---- FamilleForm
+        "nom": famille.nom,
+
+        # ---- ParentInlineFormSet management
+        "parents-TOTAL_FORMS": "2",
+        "parents-INITIAL_FORMS": "2",
+        "parents-MIN_NUM_FORMS": "0",
+        "parents-MAX_NUM_FORMS": "1000",
+
+        # ---- Form du parent courant (marqué supprimé)
+        f"parents-{idx_self}-user_id": str(parent_user.id),
+        f"parents-{idx_self}-first_name": parent_user.first_name,
+        f"parents-{idx_self}-last_name": parent_user.last_name,
+        f"parents-{idx_self}-email": parent_user.email,
+        f"parents-{idx_self}-new_password": "",
+        f"parents-{idx_self}-DELETE": "on",   # <--- clé : suppression
+
+        # ---- Form de l'autre parent (conservé)
+        f"parents-{idx_other}-user_id": str(autre_parent_user.id),
+        f"parents-{idx_other}-first_name": autre_parent_user.first_name,
+        f"parents-{idx_other}-last_name": autre_parent_user.last_name,
+        f"parents-{idx_other}-email": autre_parent_user.email,
+        f"parents-{idx_other}-new_password": "",
+        
+        # ---- EnfantInlineFormSet (aucune ligne)
+        "enfants-TOTAL_FORMS": "0",
+        "enfants-INITIAL_FORMS": "0",
+        "enfants-MIN_NUM_FORMS": "0",
+        "enfants-MAX_NUM_FORMS": "1000",
+    }
+
+    resp = client.post(reverse("famille:manage_account"), data, follow=True)
+    assert resp.status_code == 200  # redirection suivie vers points:dashboard
+
+    # L'utilisateur courant doit avoir été supprimé par le "Pass 2: deletes"
+    with pytest.raises(User.DoesNotExist):
+        User.objects.get(pk=parent_user.pk)
+
 
 
 # ------------------------------------------------------------------

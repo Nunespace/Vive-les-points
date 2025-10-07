@@ -5,6 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 from django.forms import formset_factory, inlineformset_factory, BaseFormSet
 from django.forms.widgets import HiddenInput
+from django.contrib.auth.models import Group
 from .models import Famille, Enfant, UserProfile
 
 User = get_user_model()
@@ -328,8 +329,6 @@ class EnfantManageForm(forms.ModelForm):
             user.save()
 
         # Groupe + profil enfant
-        from django.contrib.auth.models import Group
-
         group_enfant, _ = Group.objects.get_or_create(name="enfant")
         user.groups.add(group_enfant)
         UserProfile.objects.update_or_create(

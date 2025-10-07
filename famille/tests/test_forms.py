@@ -293,25 +293,39 @@ def test_enfant_manage_prefills_email_when_user_linked(famille, enfant_user):
 
 @pytest.mark.django_db
 def test_enfant_manage_clean_duplicate_email_other_user(famille, enfant):
-    other = User.objects.create_user(username="o", email="dup@example.com", password="pwd")
+    # Prépare un autre User avec l'email en doublon
+    User.objects.create_user(username="o", email="dup@example.com", password="pwd")
     assert enfant.user is None
+
     form = EnfantManageForm(
-        data={"prenom": enfant.prenom, "solde_points": enfant.solde_points, "email": "dup@example.com", "new_password": "pwd"},
+        data={
+            "prenom": enfant.prenom,
+            "email": "dup@example.com",
+            "new_password": "pwd",
+        },
         instance=enfant,
     )
-    # L'email existe déjà sur un autre user ⇒ message "Un compte utilisateur..."
+
     assert not form.is_valid()
-    assert "Un compte utilisateur existe déjà avec cet email." in form.non_field_errors()
+    # L'erreur est désormais attachée au CHAMP "email"
+    assert "email" in form.errors
+    assert "Un compte utilisateur existe déjà avec cet email." in form.errors["email"]
 
 
 @pytest.mark.django_db
 def test_enfant_manage_clean_requires_password_when_new_email_and_no_user(famille, enfant):
     form = EnfantManageForm(
-        data={"prenom": enfant.prenom, "solde_points": enfant.solde_points, "email": "newchild@example.com", "new_password": ""},
+        data={
+            "prenom": enfant.prenom,
+            "email": "newchild@example.com",
+            "new_password": "",
+        },
         instance=enfant,
     )
     assert not form.is_valid()
-    assert "Mot de passe requis si un email enfant est saisi." in form.non_field_errors()
+    # L'erreur est désormais attachée au CHAMP "new_password"
+    assert "new_password" in form.errors
+    assert "Mot de passe requis si vous renseignez l'email." in form.errors["new_password"]
 
 
 @pytest.mark.django_db

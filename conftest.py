@@ -9,12 +9,12 @@ User = get_user_model()
 
 
 @pytest.fixture
-def famille():
+def famille(db):
     return Famille.objects.create(nom="Dupont")
 
 
 @pytest.fixture
-def autre_famille():
+def autre_famille(db):
     return Famille.objects.create(nom="Martin")
 
 
