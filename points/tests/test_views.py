@@ -1,7 +1,6 @@
 import pytest
 from django.urls import reverse
 from django.utils import timezone
-from django.http import HttpResponse
 
 from points.models import (
     BaremeRecompense,
@@ -10,6 +9,7 @@ from points.models import (
     PointPositif,
     PointNegatif,
 )
+from famille.models import Enfant
 
 ISO = "%Y-%m-%d"
 
@@ -26,10 +26,11 @@ def test_bareme_view_requires_login(client):
 
 @pytest.mark.django_db
 def test_bareme_view_context_and_can_edit_flag(client, userprofile_parent, parent_user):
-    # données
-    BaremeRecompense.objects.create(points=10, valeur_euros="5€", valeur_temps="30min")
-    BaremePointPositif.objects.create(motif="Devoirs", points=1)
-    BaremePointNegatif.objects.create(motif="Bêtise", points=-1)
+    # Rattache les objets à la famille du parent
+    fam = parent_user.profile.famille
+    BaremeRecompense.objects.create(famille=fam, points=10, valeur_euros="5€", valeur_temps="30min")
+    BaremePointPositif.objects.create(famille=fam, motif="Devoirs", points=1)
+    BaremePointNegatif.objects.create(famille=fam, motif="Bêtise", points=-1)
 
     # utilisateur non staff sans perms => can_edit False
     client.force_login(parent_user)
@@ -53,7 +54,8 @@ def test_bareme_view_context_and_can_edit_flag(client, userprofile_parent, paren
 # -------------------------------------------------------------------
 @pytest.mark.django_db
 def test_update_cell_forbidden_without_perm(client, userprofile_parent, parent_user):
-    obj = BaremePointPositif.objects.create(motif="X", points=1)
+    fam = parent_user.profile.famille
+    obj = BaremePointPositif.objects.create(famille=fam, motif="X", points=1)
     client.force_login(parent_user)
     url = reverse("points:update_cell", args=["positif", obj.pk, "points"])
     resp = client.get(url)
@@ -62,7 +64,8 @@ def test_update_cell_forbidden_without_perm(client, userprofile_parent, parent_u
 
 @pytest.mark.django_db
 def test_update_cell_get_and_post_update_with_perm(client, userprofile_parent, parent_user, give_perms):
-    obj = BaremePointPositif.objects.create(motif="X", points=1)
+    fam = parent_user.profile.famille
+    obj = BaremePointPositif.objects.create(famille=fam, motif="X", points=1)
     give_perms(parent_user, ["points.change_baremepointpositif"])
     client.force_login(parent_user)
 
@@ -79,7 +82,8 @@ def test_update_cell_get_and_post_update_with_perm(client, userprofile_parent, p
 
 @pytest.mark.django_db
 def test_update_cell_post_invalid_int_keeps_value(client, userprofile_parent, parent_user, give_perms):
-    obj = BaremePointPositif.objects.create(motif="X", points=7)
+    fam = parent_user.profile.famille
+    obj = BaremePointPositif.objects.create(famille=fam, motif="X", points=7)
     give_perms(parent_user, ["points.change_baremepointpositif"])
     client.force_login(parent_user)
     url = reverse("points:update_cell", args=["positif", obj.pk, "points"])
@@ -94,7 +98,19 @@ def test_update_cell_bad_model_name_returns_400(client, userprofile_parent, pare
     client.force_login(parent_user)
     url = reverse("points:update_cell", args=["inconnu", 1, "points"])
     r = client.get(url)
-    assert r.status_code == 400
+    assert r.status_code == 400  # 404 si tu utilises un path converter
+
+
+@pytest.mark.django_db
+def test_update_cell_cannot_access_other_family_object(client, userprofile_parent, parent_user, autre_famille, give_perms):
+    # Objet créé dans une AUTRE famille
+    other_obj = BaremePointPositif.objects.create(famille=autre_famille, motif="Hors famille", points=2)
+    give_perms(parent_user, ["points.change_baremepointpositif"])
+    client.force_login(parent_user)
+    url = reverse("points:update_cell", args=["positif", other_obj.pk, "points"])
+    r = client.get(url)
+    # get_object_or_404(..., famille=famille) => 404
+    assert r.status_code == 404
 
 
 # -------------------------------------------------------------------
@@ -102,7 +118,8 @@ def test_update_cell_bad_model_name_returns_400(client, userprofile_parent, pare
 # -------------------------------------------------------------------
 @pytest.mark.django_db
 def test_delete_row_requires_post(client, userprofile_parent, parent_user):
-    obj = BaremePointNegatif.objects.create(motif="Y", points=-1)
+    fam = parent_user.profile.famille
+    obj = BaremePointNegatif.objects.create(famille=fam, motif="Y", points=-1)
     client.force_login(parent_user)
     url = reverse("points:delete_row", args=["negatif", obj.pk])
     r = client.get(url)
@@ -111,7 +128,8 @@ def test_delete_row_requires_post(client, userprofile_parent, parent_user):
 
 @pytest.mark.django_db
 def test_delete_row_forbidden_without_perm(client, userprofile_parent, parent_user):
-    obj = BaremePointNegatif.objects.create(motif="Y", points=-1)
+    fam = parent_user.profile.famille
+    obj = BaremePointNegatif.objects.create(famille=fam, motif="Y", points=-1)
     client.force_login(parent_user)
     url = reverse("points:delete_row", args=["negatif", obj.pk])
     r = client.post(url)
@@ -120,7 +138,8 @@ def test_delete_row_forbidden_without_perm(client, userprofile_parent, parent_us
 
 @pytest.mark.django_db
 def test_delete_row_with_perm_deletes_and_returns_empty(client, userprofile_parent, parent_user, give_perms):
-    obj = BaremePointNegatif.objects.create(motif="Y", points=-1)
+    fam = parent_user.profile.famille
+    obj = BaremePointNegatif.objects.create(famille=fam, motif="Y", points=-1)
     give_perms(parent_user, ["points.delete_baremepointnegatif"])
     client.force_login(parent_user)
     url = reverse("points:delete_row", args=["negatif", obj.pk])
@@ -128,6 +147,18 @@ def test_delete_row_with_perm_deletes_and_returns_empty(client, userprofile_pare
     assert r.status_code == 200
     assert r.content == b""
     assert not BaremePointNegatif.objects.filter(pk=obj.pk).exists()
+
+
+@pytest.mark.django_db
+def test_delete_row_cannot_delete_other_family_object(client, userprofile_parent, parent_user, autre_famille, give_perms):
+    other = BaremePointNegatif.objects.create(famille=autre_famille, motif="Hors", points=-2)
+    give_perms(parent_user, ["points.delete_baremepointnegatif"])
+    client.force_login(parent_user)
+    url = reverse("points:delete_row", args=["negatif", other.pk])
+    r = client.post(url)
+    # 404 attendu car filtré par famille
+    assert r.status_code == 404
+    assert BaremePointNegatif.objects.filter(pk=other.pk).exists()
 
 
 # -------------------------------------------------------------------
@@ -142,7 +173,8 @@ def test_add_row_forbidden_without_perm(client, userprofile_parent, parent_user)
 
 
 @pytest.mark.django_db
-def test_add_row_creates_positif_with_perm(client, userprofile_parent, parent_user, give_perms):
+def test_add_row_creates_positif_with_perm_and_sets_family(client, userprofile_parent, parent_user, give_perms):
+    fam = parent_user.profile.famille
     give_perms(parent_user, ["points.add_baremepointpositif"])
     client.force_login(parent_user)
     url = reverse("points:add_row", args=["positif"])
@@ -151,10 +183,12 @@ def test_add_row_creates_positif_with_perm(client, userprofile_parent, parent_us
     obj = BaremePointPositif.objects.latest("id")
     assert obj.motif == "(nouveau)"
     assert obj.points == 1
+    assert obj.famille_id == fam.id
 
 
 @pytest.mark.django_db
-def test_add_row_creates_recompense_with_perm(client, userprofile_parent, parent_user, give_perms):
+def test_add_row_creates_recompense_with_perm_and_sets_family(client, userprofile_parent, parent_user, give_perms):
+    fam = parent_user.profile.famille
     give_perms(parent_user, ["points.add_baremerecompense"])
     client.force_login(parent_user)
     url = reverse("points:add_row", args=["recompense"])
@@ -164,10 +198,12 @@ def test_add_row_creates_recompense_with_perm(client, userprofile_parent, parent
     assert obj.points == 0
     assert obj.valeur_euros == ""
     assert obj.valeur_temps == ""
+    assert obj.famille_id == fam.id
 
 
 @pytest.mark.django_db
-def test_add_row_creates_negatif_with_perm(client, userprofile_parent, parent_user, give_perms):
+def test_add_row_creates_negatif_with_perm_and_sets_family(client, userprofile_parent, parent_user, give_perms):
+    fam = parent_user.profile.famille
     give_perms(parent_user, ["points.add_baremepointnegatif"])
     client.force_login(parent_user)
     url = reverse("points:add_row", args=["negatif"])
@@ -176,6 +212,7 @@ def test_add_row_creates_negatif_with_perm(client, userprofile_parent, parent_us
     obj = BaremePointNegatif.objects.latest("id")
     assert obj.motif == "(nouveau)"
     assert obj.points == -1
+    assert obj.famille_id == fam.id
 
 
 @pytest.mark.django_db
@@ -183,7 +220,7 @@ def test_add_row_bad_model_name_400(client, userprofile_parent, parent_user):
     client.force_login(parent_user)
     url = reverse("points:add_row", args=["inconnu"])
     r = client.post(url)
-    assert r.status_code == 400
+    assert r.status_code == 400  # 404 si path converter
 
 
 # -------------------------------------------------------------------
@@ -209,8 +246,6 @@ def test_dashboard_lists_only_children_of_my_family(client, userprofile_parent, 
 # -------------------------------------------------------------------
 # NewPointsView
 # -------------------------------------------------------------------
-from famille.models import Enfant
-
 @pytest.mark.django_db
 def test_new_points_get_ok_for_my_child(client, userprofile_parent, parent_user, famille, give_perms):
     child = Enfant.objects.create(prenom="Léa", famille=famille)
@@ -289,7 +324,6 @@ def test_historique_post_forbidden_if_not_parent(client, userprofile_parent, par
     r = client.post(reverse("points:historique", args=[enfant.pk]))
     assert r.status_code == 403
     assert "Accès réservé aux parents." in r.content.decode("utf-8")
-
 
 
 @pytest.mark.django_db
