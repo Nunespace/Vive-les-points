@@ -1,7 +1,8 @@
+# points/views.py
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
-from django.views.generic import View, ListView, TemplateView
+from django.views.generic import View, ListView
 from django.contrib import messages
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
@@ -9,6 +10,7 @@ from django.contrib.auth.mixins import (
 )
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.db import transaction
 # from django.contrib.auth.decorators import permission_required as permission_required_decorator
 from django.db.models import Sum
 from .models import (
@@ -28,13 +30,20 @@ from .forms import (
 )
 
 
-class HomeView(TemplateView):
-    template_name = "points/home.html"
-
+def _get_user_famille(request):
+    """
+    Récupère la famille du user (via UserProfile).
+    Adapte si ton lien est ailleurs.
+    """
+    profile = getattr(request.user, "profile", None)
+    return getattr(profile, "famille", None)
 
 
 @login_required
 def bareme_view(request):
+    famille = _get_user_famille(request)
+    if not famille:
+        return HttpResponseForbidden("Aucune famille associée à cet utilisateur.")
 
     can_edit = (
         request.user.is_staff
@@ -43,37 +52,39 @@ def bareme_view(request):
         or request.user.has_perm("points.change_baremepointnegatif")
     )
 
-    # ⚠️ Juste pour démarrer : on remplit si vide
-    if not BaremeRecompense.objects.exists():
-        BaremeRecompense.objects.bulk_create(
-            [
-                BaremeRecompense(points=1, valeur_euros="1€", valeur_temps="10 minutes"),
-                BaremeRecompense(points=5, valeur_euros="5€ (+/- 2€ si cadeau)", valeur_temps="50 minutes"),
-                BaremeRecompense(points=10, valeur_euros="10€ (+/- 5€ si cadeau)", valeur_temps="100 minutes"),
-            ]
-        )
-    if not BaremePointPositif.objects.exists():
-        BaremePointPositif.objects.bulk_create(
-            [
-                BaremePointPositif(motif="Ranger sa chambre", points=1),
-                BaremePointPositif(motif="Aider aux tâches ménagères", points=1),
-                BaremePointPositif(motif="Être à l'heure toute la semaine", points=1),
-            ]
-        )
-    if not BaremePointNegatif.objects.exists():
-        BaremePointNegatif.objects.bulk_create(
-            [
-                BaremePointNegatif(motif="N'écoute pas ses parents", points=-1),
-                BaremePointNegatif(motif="Grossier envers ses parents", points=-3),
-            ]
-        )
+    # ⚠️ Initialisation des barèmes pour CETTE famille uniquement
+    with transaction.atomic():
+        if not BaremeRecompense.objects.filter(famille=famille).exists():
+            BaremeRecompense.objects.bulk_create(
+                [
+                    BaremeRecompense(famille=famille, points=1,  valeur_euros="1€",                          valeur_temps="10 minutes"),
+                    BaremeRecompense(famille=famille, points=5,  valeur_euros="5€ (+/- 2€ si cadeau)",       valeur_temps="50 minutes"),
+                    BaremeRecompense(famille=famille, points=10, valeur_euros="10€ (+/- 5€ si cadeau)",      valeur_temps="100 minutes"),
+                ]
+            )
+        if not BaremePointPositif.objects.filter(famille=famille).exists():
+            BaremePointPositif.objects.bulk_create(
+                [
+                    BaremePointPositif(famille=famille, motif="Ranger sa chambre",                 points=1),
+                    BaremePointPositif(famille=famille, motif="Aider aux tâches ménagères",        points=1),
+                    BaremePointPositif(famille=famille, motif="Être à l'heure toute la semaine",   points=1),
+                ]
+            )
+        if not BaremePointNegatif.objects.filter(famille=famille).exists():
+            BaremePointNegatif.objects.bulk_create(
+                [
+                    BaremePointNegatif(famille=famille, motif="N'écoute pas ses parents",      points=-1),
+                    BaremePointNegatif(famille=famille, motif="Grossier envers ses parents",   points=-3),
+                ]
+            )
+
     return render(
         request,
         "points/bareme.html",
         {
-            "recompenses": BaremeRecompense.objects.all(),
-            "positifs": BaremePointPositif.objects.all(),
-            "negatifs": BaremePointNegatif.objects.all(),
+            "recompenses": BaremeRecompense.objects.filter(famille=famille).order_by("points"),
+            "positifs":    BaremePointPositif.objects.filter(famille=famille).order_by("motif"),
+            "negatifs":    BaremePointNegatif.objects.filter(famille=famille).order_by("motif"),
             "can_edit": can_edit,
         },
     )
@@ -81,10 +92,14 @@ def bareme_view(request):
 
 @login_required
 def update_cell(request, model_name, pk, field):
+    famille = _get_user_famille(request)
+    if not famille:
+        return HttpResponseForbidden("Aucune famille associée à cet utilisateur.")
+
     model_map = {
         "recompense": BaremeRecompense,
-        "positif": BaremePointPositif,
-        "negatif": BaremePointNegatif,
+        "positif":    BaremePointPositif,
+        "negatif":    BaremePointNegatif,
     }
     if model_name not in model_map:
         return HttpResponseBadRequest("Model inconnu")
@@ -92,14 +107,15 @@ def update_cell(request, model_name, pk, field):
     # 🔐 Vérif permission d’édition
     perm_map = {
         "recompense": "points.change_baremerecompense",
-        "positif": "points.change_baremepointpositif",
-        "negatif": "points.change_baremepointnegatif",
+        "positif":    "points.change_baremepointpositif",
+        "negatif":    "points.change_baremepointnegatif",
     }
     if not (request.user.is_staff or request.user.has_perm(perm_map[model_name])):
         return HttpResponseForbidden("Non autorisé")
 
     model = model_map[model_name]
-    obj = get_object_or_404(model, pk=pk)
+    # 👉 Récupération **bornée à la famille**
+    obj = get_object_or_404(model, pk=pk, famille=famille)
 
     ctx = {"model_name": model_name, "pk": obj.pk, "field": field}
 
@@ -121,19 +137,22 @@ def update_cell(request, model_name, pk, field):
     return render(request, "points/cell_form.html", ctx)
 
 
-# points/views.py
 @login_required
 @require_POST
 def delete_row(request, model_name, pk):
+    famille = _get_user_famille(request)
+    if not famille:
+        return HttpResponseForbidden("Aucune famille associée à cet utilisateur.")
+
     model_map = {
         "recompense": BaremeRecompense,
-        "positif": BaremePointPositif,
-        "negatif": BaremePointNegatif,
+        "positif":    BaremePointPositif,
+        "negatif":    BaremePointNegatif,
     }
     perm_map = {
         "recompense": "points.delete_baremerecompense",
-        "positif": "points.delete_baremepointpositif",
-        "negatif": "points.delete_baremepointnegatif",
+        "positif":    "points.delete_baremepointpositif",
+        "negatif":    "points.delete_baremepointnegatif",
     }
 
     if model_name not in model_map:
@@ -142,25 +161,28 @@ def delete_row(request, model_name, pk):
         return HttpResponseForbidden("Non autorisé")
 
     model = model_map[model_name]
-    obj = get_object_or_404(model, pk=pk)
+    # 👉 Suppression limitée à la famille
+    obj = get_object_or_404(model, pk=pk, famille=famille)
     obj.delete()
-
-    # <= 200 OK + chaîne vide : la <tr> ciblée est remplacée par rien => disparait
     return HttpResponse("")
 
 
 @login_required
 @require_POST
 def add_row(request, model_name):
+    famille = _get_user_famille(request)
+    if not famille:
+        return HttpResponseForbidden("Aucune famille associée à cet utilisateur.")
+
     model_map = {
         "recompense": BaremeRecompense,
-        "positif": BaremePointPositif,
-        "negatif": BaremePointNegatif,
+        "positif":    BaremePointPositif,
+        "negatif":    BaremePointNegatif,
     }
     add_perm_map = {
         "recompense": "points.add_baremerecompense",
-        "positif": "points.add_baremepointpositif",
-        "negatif": "points.add_baremepointnegatif",
+        "positif":    "points.add_baremepointpositif",
+        "negatif":    "points.add_baremepointnegatif",
     }
     if model_name not in model_map:
         return HttpResponseBadRequest("Model inconnu")
@@ -168,15 +190,14 @@ def add_row(request, model_name):
     if not (request.user.is_staff or request.user.has_perm(add_perm_map[model_name])):
         return HttpResponseForbidden("Non autorisé")
 
-    # Valeurs par défaut (à adapter si tu veux)
+    # ✅ Valeurs par défaut + **famille**
     if model_name == "recompense":
-        obj = BaremeRecompense.objects.create(points=0, valeur_euros="", valeur_temps="")
+        obj = BaremeRecompense.objects.create(famille=famille, points=0, valeur_euros="", valeur_temps="")
     elif model_name == "positif":
-        obj = BaremePointPositif.objects.create(motif="(nouveau)", points=1)
+        obj = BaremePointPositif.objects.create(famille=famille, motif="(nouveau)", points=1)
     else:  # "negatif"
-        obj = BaremePointNegatif.objects.create(motif="(nouveau)", points=-1)
+        obj = BaremePointNegatif.objects.create(famille=famille, motif="(nouveau)", points=-1)
 
-    # Même logique que dans bareme_view pour l’édition
     can_edit = (
         request.user.is_staff
         or request.user.has_perm("points.change_baremerecompense")

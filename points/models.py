@@ -6,7 +6,7 @@ from famille.models import Enfant, Famille
 
 
 class BaremeRecompense(models.Model):
-    famille = models.ForeignKey(Famille, on_delete=models.CASCADE)
+    famille = models.ForeignKey(Famille, on_delete=models.CASCADE, null=True)
     points = models.PositiveIntegerField()
     valeur_euros = models.CharField(max_length=200)
     valeur_temps = models.CharField(max_length=200)
@@ -16,7 +16,7 @@ class BaremeRecompense(models.Model):
 
 
 class BaremePointPositif(models.Model):
-    famille = models.ForeignKey(Famille, on_delete=models.CASCADE)
+    famille = models.ForeignKey(Famille, on_delete=models.CASCADE, null=True)
     motif = models.CharField(max_length=1000)
     points = models.IntegerField(default=1)  # toujours positif
 
@@ -25,7 +25,7 @@ class BaremePointPositif(models.Model):
 
 
 class BaremePointNegatif(models.Model):
-    famille = models.ForeignKey(Famille, on_delete=models.CASCADE)
+    famille = models.ForeignKey(Famille, on_delete=models.CASCADE, null=True)
     motif = models.CharField(max_length=1000)
     points = models.IntegerField(default=-1)  # toujours négatif
 
