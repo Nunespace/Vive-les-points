@@ -11,8 +11,8 @@ def maintenance(request):
 
 
 urlpatterns = [
-    #path("", landing_view, name="landing"),   # Page d'accueil
-    path("", maintenance),
+    path("", landing_view, name="landing"),   # Page d'accueil
+    # path("", maintenance),
     path("confidentialite/", confidentialite_view, name="confidentialite"),
     path("famille/", include("famille.urls")),
     path("points/", include("points.urls")),
